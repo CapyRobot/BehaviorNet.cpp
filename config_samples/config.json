@@ -1,0 +1,69 @@
+{
+    "config_metadata": {
+        "version": "0.1",
+        "id": "sample_config",
+        "authors": [
+            "capybot"
+        ]
+    },
+    "places": [
+        {
+            "place_id": "A"
+        },
+        {
+            "place_id": "B"
+        },
+        {
+            "place_id": "C"
+        },
+        {
+            "place_id": "D"
+        }
+    ],
+    "transitions": [
+        {
+            "transition_id": "T1",
+            "transition_type": "manual",
+            "transition_arcs": [
+                {
+                    "place_id": "A",
+                    "arc_type": "input"
+                },
+                {
+                    "place_id": "B",
+                    "arc_type": "output"
+                },
+                {
+                    "place_id": "C",
+                    "arc_type": "output"
+                }
+            ]
+        },
+        {
+            "transition_id": "T2",
+            "transition_type": "manual",
+            "transition_arcs": [
+                {
+                    "place_id": "D",
+                    "arc_type": "output"
+                },
+                {
+                    "place_id": "B",
+                    "arc_type": "input"
+                },
+                {
+                    "place_id": "C",
+                    "arc_type": "input"
+                }
+            ]
+        }
+    ],
+    "initial_marking": [
+        {
+            "place_id": "A",
+            "number_tokens": 3
+        }
+    ],
+    "execution_parameters": {},
+    "__gui_metadata": {}
+}
