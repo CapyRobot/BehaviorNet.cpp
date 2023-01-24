@@ -18,9 +18,9 @@
 #ifndef BEHAVIOR_NET_CPP_PLACE_HPP_
 #define BEHAVIOR_NET_CPP_PLACE_HPP_
 
+#include "behavior_net/Common.hpp"
 #include "behavior_net/Config.hpp"
 #include "behavior_net/Token.hpp"
-#include "behavior_net/Common.hpp"
 
 #include <3rd_party/nlohmann/json.hpp>
 #include <deque>

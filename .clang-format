@@ -1,0 +1,9 @@
+---
+Language: Cpp
+BasedOnStyle: Microsoft
+AccessModifierOffset: -4
+AllowShortFunctionsOnASingleLine: Inline
+ColumnLimit: 120
+TabWidth: 8
+UseTab: Never
+...
