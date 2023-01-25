@@ -15,52 +15,34 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef BEHAVIOR_NET_CPP_BEHAVIOR_NET_HPP_
-#define BEHAVIOR_NET_CPP_BEHAVIOR_NET_HPP_
+#ifndef BEHAVIOR_NET_CPP_CONFIG_HPP_
+#define BEHAVIOR_NET_CPP_CONFIG_HPP_
 
-#include "behavior_net/Config.hpp"
-#include "behavior_net/Place.hpp"
-#include "behavior_net/Token.hpp"
-#include "behavior_net/Transition.hpp"
+#include <fstream>
 
-#include <memory>
-#include <string_view>
+#include <3rd_party/nlohmann/json.hpp>
 
 namespace capybot
 {
 namespace bnet
 {
 
-class INet
+class PetriNetConfig
 {
 public:
-    using Marking = std::unordered_map<std::string, uint32_t>;
+    PetriNetConfig(std::string const &configFilePath)
+    {
+        std::ifstream file(configFilePath);
+        file >> m_config;
+    }
 
-    // virtual void run() = 0;
-    // virtual void pause() = 0;
-    // virtual void stop() = 0;
+    const nlohmann::json &get() const { return m_config; }
 
-    virtual void addToken(Token::SharedPtr const &newToken, std::string_view placeId) = 0;
-
-    // struct Marking
-    // {
-    //     std::vector<std::pair<std::string, uint32_t>> places;
-    //     std::vector<std::pair<std::ve, uint32_t>> places;
-    // };
-    // virtual Marking getCurrentState() const = 0;
-
-    virtual void prettyPrintState() const = 0;
-
-    virtual Marking getCurrentMarking() const = 0;
-
-    virtual void triggerManualTransition(std::string_view const &id) = 0;
-
-    // virtual BlackboardPtr getBlackboardPtr() = 0;
+private:
+    nlohmann::json m_config;
 };
-
-std::unique_ptr<INet> create(BehaviorNetConfig const &config);
 
 } // namespace bnet
 } // namespace capybot
 
-#endif // BEHAVIOR_NET_CPP_BEHAVIOR_NET_HPP_
+#endif // BEHAVIOR_NET_CPP_CONFIG_HPP_

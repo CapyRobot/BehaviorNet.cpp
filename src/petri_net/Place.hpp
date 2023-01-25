@@ -18,9 +18,9 @@
 #ifndef BEHAVIOR_NET_CPP_PLACE_HPP_
 #define BEHAVIOR_NET_CPP_PLACE_HPP_
 
-#include "behavior_net/Common.hpp"
-#include "behavior_net/Config.hpp"
-#include "behavior_net/Token.hpp"
+#include "petri_net/Common.hpp"
+#include "petri_net/Config.hpp"
+#include "petri_net/Token.hpp"
 
 #include <3rd_party/nlohmann/json.hpp>
 #include <deque>
@@ -37,7 +37,7 @@ public:
     using SharedPtr = std::shared_ptr<Place>;
     using SharedPtrVec = std::vector<SharedPtr>;
 
-    static std::vector<std::shared_ptr<Place>> createPlaces(BehaviorNetConfig const &netConfig)
+    static std::vector<std::shared_ptr<Place>> createPlaces(PetriNetConfig const &netConfig)
     {
         auto placeConfigs = netConfig.get().at("places");
 

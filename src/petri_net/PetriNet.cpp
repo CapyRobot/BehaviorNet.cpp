@@ -15,7 +15,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "behavior_net/BehaviorNet.hpp"
+#include "petri_net/PetriNet.hpp"
 
 #include <deque>
 #include <iostream>
@@ -29,10 +29,10 @@ namespace capybot
 namespace bnet
 {
 
-class PetriNetImpl : public INet
+class PetriNetImpl : public IPetriNet
 {
 public:
-    PetriNetImpl(BehaviorNetConfig const &config)
+    PetriNetImpl(PetriNetConfig const &config)
     {
         m_places = Place::createPlaces(config);
         m_transitions = Transition::createTransitions(config, m_places);
@@ -105,7 +105,7 @@ private:
     std::vector<Transition> m_transitions;
 };
 
-std::unique_ptr<INet> create(BehaviorNetConfig const &config)
+std::unique_ptr<IPetriNet> create(PetriNetConfig const &config)
 {
     return std::make_unique<PetriNetImpl>(config);
 }

@@ -17,18 +17,18 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "behavior_net/BehaviorNet.hpp"
+#include "petri_net/PetriNet.hpp"
 
 using namespace capybot;
 
-std::unique_ptr<bnet::INet> createFromSampleConfig()
+std::unique_ptr<bnet::IPetriNet> createFromSampleConfig()
 {
-    auto config = bnet::BehaviorNetConfig(
+    auto config = bnet::PetriNetConfig(
         "config_samples/config.json"); // TODO: create test specific config once we have a stable config format
     return bnet::create(config);
 }
 
-TEST_CASE("We can manually trigger transitions.", "[BehaviorNet]")
+TEST_CASE("We can manually trigger transitions.", "[PetriNet]")
 {
     auto net = createFromSampleConfig();
 
@@ -63,7 +63,7 @@ TEST_CASE("We can manually trigger transitions.", "[BehaviorNet]")
     }
 }
 
-TEST_CASE("We can manage token content", "[BehaviorNet/Token]")
+TEST_CASE("We can manage token content", "[PetriNet/Token]")
 {
     // add and retrieve content
     {

@@ -1,7 +1,7 @@
 
 cc_test(
     name = "behavior_net_test",
-    srcs = ["BehaviorNetTest.cpp"],
+    srcs = ["PetriNetTest.cpp"],
     data = [
         "//config_samples:config_samples"
     ],

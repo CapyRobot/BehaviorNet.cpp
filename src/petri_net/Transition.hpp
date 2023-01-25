@@ -18,10 +18,10 @@
 #ifndef BEHAVIOR_NET_CPP_TRANSITION_HPP_
 #define BEHAVIOR_NET_CPP_TRANSITION_HPP_
 
-#include "behavior_net/Common.hpp"
-#include "behavior_net/Config.hpp"
-#include "behavior_net/Place.hpp"
-#include "behavior_net/Token.hpp"
+#include "petri_net/Common.hpp"
+#include "petri_net/Config.hpp"
+#include "petri_net/Place.hpp"
+#include "petri_net/Token.hpp"
 
 #include <3rd_party/nlohmann/json.hpp>
 #include <vector>
@@ -36,7 +36,7 @@ public:
     using SharedPtr = std::shared_ptr<Token>;
     using SharedPtrVec = std::vector<SharedPtr>;
 
-    static std::vector<Transition> createTransitions(BehaviorNetConfig const &netConfig, Place::SharedPtrVec places)
+    static std::vector<Transition> createTransitions(PetriNetConfig const &netConfig, Place::SharedPtrVec places)
     {
         auto transitionConfigs = netConfig.get().at("transitions");
 
