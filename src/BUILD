@@ -5,16 +5,18 @@ cc_library(
     srcs = [
         "petri_net/PetriNet.cpp"
     ],
-    hdrs = [
-        "petri_net/PetriNet.hpp",
-        "petri_net/Common.hpp",
-        "petri_net/Config.hpp",
-        "petri_net/Token.hpp",
-        "petri_net/Place.hpp",
-        "petri_net/Transition.hpp",
-        "3rd_party/nlohmann/json.hpp",
-    ],
+    hdrs = glob(["**/*.hpp"]) + glob(["**/*.cpp"]),
+    # [
+    #     "petri_net/PetriNet.hpp",
+    #     "petri_net/Common.hpp",
+    #     "petri_net/Config.hpp",
+    #     "petri_net/Token.hpp",
+    #     "petri_net/Place.hpp",
+    #     "petri_net/Transition.hpp",
+    #     "3rd_party/nlohmann/json.hpp",
+    # ],
     copts = ["-std=c++20"],
+    linkopts = ["-lpthread"],
     includes = ["./"],
     visibility = ["//visibility:public"]
 )

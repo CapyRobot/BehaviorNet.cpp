@@ -2,8 +2,11 @@
 Language: Cpp
 BasedOnStyle: Microsoft
 AccessModifierOffset: -4
+AlwaysBreakTemplateDeclarations: Yes
 AllowShortFunctionsOnASingleLine: Inline
 ColumnLimit: 120
+PointerAlignment: Left
+ReferenceAlignment: Left
 TabWidth: 8
 UseTab: Never
 ...

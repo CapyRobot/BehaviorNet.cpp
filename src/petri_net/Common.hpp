@@ -40,7 +40,7 @@ protected:
     std::string m_msg;
 };
 
-class RuntimeError : public Exception
+class RuntimeError : public Exception // TODO: error codes better?
 {
 public:
     using Exception::Exception;
@@ -53,6 +53,13 @@ public:
 };
 
 class InvalidValueError : public Exception
+{
+public:
+    using Exception::Exception;
+};
+
+
+class NotImplementedError : public Exception
 {
 public:
     using Exception::Exception;

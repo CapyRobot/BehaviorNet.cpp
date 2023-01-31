@@ -35,6 +35,12 @@ public:
     using SharedPtr = std::shared_ptr<Token>;
     using SharedPtrVec = std::vector<SharedPtr>;
 
+    static constexpr uint64_t INVALID_TOKEN_ID{0UL};
+
+    Token() : m_uniqueId(generateUniqueId()) {}
+    ~Token() = default;
+    Token &operator=(const Token &other) { m_contentBlocks = other.m_contentBlocks; } // keep same unique id
+
     bool hasKey(std::string const &key) const { return m_contentBlocks.find(key) != m_contentBlocks.end(); }
 
     nlohmann::json getContent(std::string const &key) const
@@ -67,7 +73,19 @@ public:
         }
     }
 
+    uint64_t getUniqueId() const { return m_uniqueId; }
+
 private:
+    static uint64_t generateUniqueId()
+    {
+        static uint64_t s_uniqueIdCounter{0UL};
+        ++s_uniqueIdCounter;
+        if (s_uniqueIdCounter == INVALID_TOKEN_ID)
+            ++s_uniqueIdCounter;
+        return s_uniqueIdCounter;
+    }
+
+    uint64_t m_uniqueId;
     std::unordered_map<std::string, nlohmann::json> m_contentBlocks;
 };
 
