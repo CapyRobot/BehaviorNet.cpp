@@ -15,64 +15,34 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef BEHAVIOR_NET_CPP_PLACE_HPP_
-#define BEHAVIOR_NET_CPP_PLACE_HPP_
+#ifndef BEHAVIOR_NET_CPP_CONFIG_HPP_ // TODO: follow standard
+#define BEHAVIOR_NET_CPP_CONFIG_HPP_
 
-#include "petri_net/Common.hpp"
-#include "petri_net/Config.hpp"
-#include "petri_net/Token.hpp"
+#include <fstream>
 
 #include <3rd_party/nlohmann/json.hpp>
-#include <deque>
-#include <unordered_map>
 
 namespace capybot
 {
 namespace bnet
 {
 
-class Place
+class NetConfig
 {
 public:
-    using SharedPtr = std::shared_ptr<Place>;
-    using SharedPtrVec = std::vector<SharedPtr>;
-
-    static std::vector<std::shared_ptr<Place>> createPlaces(PetriNetConfig const &netConfig)
+    NetConfig(std::string const &configFilePath)
     {
-        auto placeConfigs = netConfig.get().at("places");
-
-        std::vector<std::shared_ptr<Place>> placePtrs;
-        for (auto &&placeConfig : placeConfigs)
-        {
-            placePtrs.emplace_back(std::make_shared<Place>(placeConfig));
-        }
-
-        // TODO: ensure no repeated ids
-
-        return placePtrs;
+        std::ifstream file(configFilePath);
+        file >> m_config;
     }
 
-    Place(nlohmann::json config) : m_id(config.at("place_id").get<std::string>()) {}
-
-    std::string const &getId() const { return m_id; }
-
-    void insertToken(Token::SharedPtr tokenPtr) { m_tokens.push_back(tokenPtr); }
-
-    Token::SharedPtr consumeToken()
-    {
-        auto token = m_tokens.front();
-        m_tokens.pop_front();
-        return token;
-    }
-
-    uint32_t getNumberTokens() const { return m_tokens.size(); }
+    const nlohmann::json &get() const { return m_config; }
 
 private:
-    std::string m_id;
-    std::deque<Token::SharedPtr> m_tokens;
+    nlohmann::json m_config;
 };
 
 } // namespace bnet
 } // namespace capybot
 
-#endif // BEHAVIOR_NET_CPP_PLACE_HPP_
+#endif // BEHAVIOR_NET_CPP_CONFIG_HPP_

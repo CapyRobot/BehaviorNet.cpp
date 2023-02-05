@@ -22,7 +22,7 @@
 #include <iostream>
 #include <unordered_map>
 
-#include "petri_net/Common.hpp"
+#include "behavior_net/Common.hpp"
 
 namespace capybot
 {
@@ -32,18 +32,15 @@ namespace bnet
 class Token
 {
 public:
-    using SharedPtr = std::shared_ptr<Token>;
-    using SharedPtrVec = std::vector<SharedPtr>;
-
     static constexpr uint64_t INVALID_TOKEN_ID{0UL};
 
     Token() : m_uniqueId(generateUniqueId()) {}
     ~Token() = default;
-    Token &operator=(const Token &other) { m_contentBlocks = other.m_contentBlocks; } // keep same unique id
+    Token& operator=(const Token& other) { m_contentBlocks = other.m_contentBlocks; } // keep same unique id
 
-    bool hasKey(std::string const &key) const { return m_contentBlocks.find(key) != m_contentBlocks.end(); }
+    bool hasKey(std::string const& key) const { return m_contentBlocks.find(key) != m_contentBlocks.end(); }
 
-    nlohmann::json getContent(std::string const &key) const
+    nlohmann::json getContent(std::string const& key) const
     {
         if (!hasKey(key))
         {
@@ -52,7 +49,7 @@ public:
         return m_contentBlocks.at(key);
     }
 
-    void addContentBlock(std::string const &key, nlohmann::json blockContent)
+    void addContentBlock(std::string const& key, nlohmann::json blockContent)
     {
         const auto [it, success] = m_contentBlocks.insert({key, blockContent});
         if (!success)
@@ -61,7 +58,7 @@ public:
         }
     }
 
-    void mergeContentBlocks(Token const &token)
+    void mergeContentBlocks(Token const& token)
     {
         for (auto block : token.m_contentBlocks)
         {
@@ -73,7 +70,9 @@ public:
         }
     }
 
-    uint64_t getUniqueId() const { return m_uniqueId; }
+    auto getUniqueId() const { return m_uniqueId; }
+    auto getCurrentPlace() const { return m_currentPlaceId; }
+    void setCurrentPlace(std::string const& placeId) { m_currentPlaceId = placeId; }
 
 private:
     static uint64_t generateUniqueId()
@@ -86,6 +85,7 @@ private:
     }
 
     uint64_t m_uniqueId;
+    std::string m_currentPlaceId;
     std::unordered_map<std::string, nlohmann::json> m_contentBlocks;
 };
 

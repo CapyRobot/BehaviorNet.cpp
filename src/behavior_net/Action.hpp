@@ -19,7 +19,7 @@
 #define BEHAVIOR_NET_CPP_ACTION_HPP_ // TODO: this pattern may create conflicts. Change to project_dir_filename
                                      // (currently missing dir)
 
-#include "petri_net/Token.hpp"
+#include "behavior_net/Token.hpp"
 
 #include "3rd_party/taskflow/taskflow.hpp"
 
@@ -128,15 +128,16 @@ struct ActionExecutionUnit
 
 struct ActionExecutionResult
 {
-    uint64_t tokenId; // TODO: or ptr?
+    uint64_t tokenId; // TODO: ptr or iterator
     ActionExecutionStatus status;
 };
-
 
 /// @brief Action object to be associated with a place
 class Action
 {
 public:
+    using UniquePtr = std::unique_ptr<Action>;
+
     Action(ThreadPool& tp) : m_threadPool(tp) {}
 
     class Factory
@@ -148,10 +149,16 @@ public:
             ACTION_TYPE_SLEEP = 0,
         };
 
-        static std::unique_ptr<Action> create(ThreadPool& tp, ActionType type, nlohmann::json const parameters)
+        static ActionType typeFromStr(std::string const& typeStr)
         {
-            std::unique_ptr<Action> action =
-                std::make_unique<Action>(tp); // do we really need to deal with pointers here?
+            static const std::unordered_map<std::string, ActionType> s_typeStrMap = {
+                {"ACTION_TYPE_SLEEP", ACTION_TYPE_SLEEP}};
+            return s_typeStrMap.at(typeStr);
+        }
+
+        static UniquePtr create(ThreadPool& tp, ActionType type, nlohmann::json const parameters)
+        {
+            UniquePtr action = std::make_unique<Action>(tp); // do we really need to deal with pointers here?
             switch (type)
             {
             case ACTION_TYPE_SLEEP: {
@@ -164,21 +171,31 @@ public:
             }
             return action;
         }
+
+        static std::map<std::string, UniquePtr> createActionMap(ThreadPool& tp, nlohmann::json const actionsConfig)
+        {
+            std::map<std::string, UniquePtr> actionMap;
+            for (auto&& config : actionsConfig)
+            {
+                actionMap.emplace(config["place"], create(tp, typeFromStr(config["type"]), config["params"]));
+            }
+            return actionMap;
+        }
     };
 
-    void executeAsync(Token::SharedPtrVec tokens)
+    void executeAsync(std::vector<Token> tokens)
     {
         if (!m_epochExecutions.empty())
         {
             throw LogicError("Action::executeAsync: 'getEpochResults' must be called for all 'executeAsync' calls.");
         }
 
-        for (auto&& tokenPtr : tokens)
+        for (auto&& token : tokens)
         {
-            if (isInDelayedExecution(tokenPtr->getUniqueId())) // add unit test
+            if (isInDelayedExecution(token.getUniqueId())) // add unit test
                 continue;
 
-            m_epochExecutions.emplace_back(tokenPtr->getUniqueId(), m_actionImpl->createCallable(tokenPtr));
+            m_epochExecutions.emplace_back(token.getUniqueId(), m_actionImpl->createCallable(token));
             m_threadPool.executeAsync(m_epochExecutions.back().task);
         }
     }
@@ -232,6 +249,8 @@ public:
         return results;
     }
 
+    uint32_t getNumberDelayedTasks() const { return m_delayedExecutions.size(); }
+
 private:
     bool isInDelayedExecution(uint64_t tokenId) const
     {
@@ -248,7 +267,7 @@ private:
     class IActionImpl
     {
     public:
-        virtual std::function<ActionExecutionStatus()> createCallable(Token::SharedPtr tokenPtr) = 0;
+        virtual std::function<ActionExecutionStatus()> createCallable(Token const& token) = 0;
     };
 
     std::unique_ptr<IActionImpl> m_actionImpl{};
@@ -258,11 +277,13 @@ private:
     public:
         SleepAction(nlohmann::json const config) : m_durationMs(config.at("duration_ms").get<uint32_t>()) {}
 
-        std::function<ActionExecutionStatus()> createCallable(Token::SharedPtr tokenPtr) override
+        std::function<ActionExecutionStatus()> createCallable(Token const& token) override
         {
-            std::ignore = tokenPtr;
+            std::ignore = token;
             return [duration = m_durationMs]() -> ActionExecutionStatus {
+                log::timePoint("SleepAction start...");
                 std::this_thread::sleep_for(duration);
+                log::timePoint("SleepAction ... done");
                 return ACTION_EXEC_STATUS_COMPLETED_SUCCESS;
             };
         }

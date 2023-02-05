@@ -3,16 +3,16 @@ load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 cc_library(
     name = "behavior_net_lib",
     srcs = [
-        "petri_net/PetriNet.cpp"
+        # "behavior_net/PetriNet.cpp"
     ],
     hdrs = glob(["**/*.hpp"]) + glob(["**/*.cpp"]),
     # [
-    #     "petri_net/PetriNet.hpp",
-    #     "petri_net/Common.hpp",
-    #     "petri_net/Config.hpp",
-    #     "petri_net/Token.hpp",
-    #     "petri_net/Place.hpp",
-    #     "petri_net/Transition.hpp",
+    #     "behavior_net/PetriNet.hpp",
+    #     "behavior_net/Common.hpp",
+    #     "behavior_net/Config.hpp",
+    #     "behavior_net/Token.hpp",
+    #     "behavior_net/Place.hpp",
+    #     "behavior_net/Transition.hpp",
     #     "3rd_party/nlohmann/json.hpp",
     # ],
     copts = ["-std=c++20"],

@@ -3,61 +3,76 @@
         "version": "0.1",
         "id": "sample_config",
         "authors": [
-            "capybot"
+            "capybot<e@capybot.com>"
         ]
     },
-    "places": [
-        {
-            "place_id": "A"
-        },
-        {
-            "place_id": "B"
-        },
-        {
-            "place_id": "C"
-        },
-        {
-            "place_id": "D"
-        }
-    ],
-    "transitions": [
-        {
-            "transition_id": "T1",
-            "transition_type": "manual",
-            "transition_arcs": [
-                {
-                    "place_id": "A",
-                    "arc_type": "input"
-                },
-                {
-                    "place_id": "B",
-                    "arc_type": "output"
-                },
-                {
-                    "place_id": "C",
-                    "arc_type": "output"
+    "petri_net": {
+        "places": [
+            {
+                "place_id": "A"
+            },
+            {
+                "place_id": "B"
+            },
+            {
+                "place_id": "C"
+            },
+            {
+                "place_id": "D"
+            }
+        ],
+        "transitions": [
+            {
+                "transition_id": "T1",
+                "transition_type": "manual",
+                "transition_arcs": [
+                    {
+                        "place_id": "A",
+                        "arc_type": "input"
+                    },
+                    {
+                        "place_id": "B",
+                        "arc_type": "output"
+                    },
+                    {
+                        "place_id": "C",
+                        "arc_type": "output"
+                    }
+                ]
+            },
+            {
+                "transition_id": "T2",
+                "transition_type": "manual",
+                "transition_arcs": [
+                    {
+                        "place_id": "D",
+                        "arc_type": "output"
+                    },
+                    {
+                        "place_id": "B",
+                        "arc_type": "input"
+                    },
+                    {
+                        "place_id": "C",
+                        "arc_type": "input"
+                    }
+                ]
+            }
+        ]
+    },
+    "controller": {
+        "thread_poll_workers": 4,
+        "epoch_period_ms": 100,
+        "actions": [
+            {
+                "place": "B",
+                "type": "ACTION_TYPE_SLEEP",
+                "params": {
+                    "duration_ms": 250
                 }
-            ]
-        },
-        {
-            "transition_id": "T2",
-            "transition_type": "manual",
-            "transition_arcs": [
-                {
-                    "place_id": "D",
-                    "arc_type": "output"
-                },
-                {
-                    "place_id": "B",
-                    "arc_type": "input"
-                },
-                {
-                    "place_id": "C",
-                    "arc_type": "input"
-                }
-            ]
-        }
-    ],
+            }
+        ]
+    },
     "initial_marking": [
         {
             "place_id": "A",

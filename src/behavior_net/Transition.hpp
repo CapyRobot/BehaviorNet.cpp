@@ -18,10 +18,9 @@
 #ifndef BEHAVIOR_NET_CPP_TRANSITION_HPP_
 #define BEHAVIOR_NET_CPP_TRANSITION_HPP_
 
-#include "petri_net/Common.hpp"
-#include "petri_net/Config.hpp"
-#include "petri_net/Place.hpp"
-#include "petri_net/Token.hpp"
+#include "behavior_net/Common.hpp"
+#include "behavior_net/Place.hpp"
+#include "behavior_net/Token.hpp"
 
 #include <3rd_party/nlohmann/json.hpp>
 #include <vector>
@@ -36,12 +35,12 @@ public:
     using SharedPtr = std::shared_ptr<Token>;
     using SharedPtrVec = std::vector<SharedPtr>;
 
-    static std::vector<Transition> createTransitions(PetriNetConfig const &netConfig, Place::SharedPtrVec places)
+    static std::vector<Transition> createTransitions(nlohmann::json const& netConfig, Place::IdMap const& places)
     {
-        auto transitionConfigs = netConfig.get().at("transitions");
+        auto transitionConfigs = netConfig.at("transitions");
 
         std::vector<Transition> transitions;
-        for (auto &&transitionConfig : transitionConfigs)
+        for (auto&& transitionConfig : transitionConfigs)
         {
             transitions.emplace_back(transitionConfig, places);
         }
@@ -61,7 +60,7 @@ public:
         } type;
     };
 
-    Transition(nlohmann::json config, Place::SharedPtrVec const &places) // TODO: places to map
+    Transition(nlohmann::json config, Place::IdMap const& places)
         : m_id(config.at("transition_id").get<std::string>())
     {
         {
@@ -80,21 +79,15 @@ public:
             }
         }
 
-        for (auto &&arcConfig : config.at("transition_arcs")) // TODO: to Arc constructor
+        for (auto&& arcConfig : config.at("transition_arcs")) // TODO: to Arc constructor
         {
             Arc arc;
             const auto placeId = arcConfig.at("place_id").get<std::string>();
-            for (auto &&placePtr : places)
-            {
-                if (placeId == placePtr->getId())
-                {
-                    arc.place = placePtr;
-                }
-            }
-            if (arc.place == nullptr) // place id does not exist within created places
-            {
-                throw InvalidValueError("Transition::Transition: place with this id does not exist: " + placeId);
-            }
+            arc.place = places.at(placeId);
+            // if (arc.place == nullptr) // TODO place id does not exist within created places
+            // {
+            //     throw InvalidValueError("Transition::Transition: place with this id does not exist: " + placeId);
+            // }
 
             const auto typeStr = arcConfig.at("arc_type").get<std::string>();
             if (typeStr == "output")
@@ -114,18 +107,18 @@ public:
         }
     }
 
-    std::string const &getId() const { return m_id; }
+    std::string const& getId() const { return m_id; }
 
     bool isEnabled() const
     {
-        for (auto &&arc : m_inputArcs)
+        for (auto&& arc : m_inputArcs)
         {
-            if (arc.place->getNumberTokens() == 0)
+            if (arc.place->getNumberTokensAvailable() == 0)
             {
                 return false;
             }
         }
-        for (auto &&arc : m_outputArcs)
+        for (auto&& arc : m_outputArcs)
         {
             // TODO: at capacity?
         }
@@ -139,19 +132,19 @@ public:
             throw LogicError("Transition::trigger: trying to trigger disabled transition.");
         }
 
-        Token::SharedPtrVec consumedTokens;
-        for (auto &&arc : m_inputArcs)
+        std::vector<Token> consumedTokens;
+        for (auto&& arc : m_inputArcs)
         {
             consumedTokens.push_back(arc.place->consumeToken());
         }
 
-        Token::SharedPtr outToken = std::make_shared<Token>();
-        for (auto &&t : consumedTokens)
+        Token outToken;
+        for (auto&& t : consumedTokens)
         {
-            outToken->mergeContentBlocks(*t);
+            outToken.mergeContentBlocks(t);
         }
 
-        for (auto &&arc : m_outputArcs)
+        for (auto&& arc : m_outputArcs)
         {
             arc.place->insertToken(outToken);
         }

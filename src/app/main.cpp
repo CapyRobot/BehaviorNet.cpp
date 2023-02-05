@@ -15,57 +15,30 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef BEHAVIOR_NET_CPP_COMMON_HPP_
-#define BEHAVIOR_NET_CPP_COMMON_HPP_
+#include "behavior_net/PetriNet.hpp"
 
-#include <exception>
-#include <sstream>
-#include <string>
-
-namespace capybot
+int main()
 {
-namespace bnet
-{
+    auto config = capybot::bnet::NetConfig("/home/erocha/capybot/b-net/config_samples/config.json");
+    auto net = capybot::bnet::createPetriNet(config);
 
-class Exception : public std::exception
-{
-public:
-    explicit Exception(const char *message) : m_msg(message) {}
-    explicit Exception(std::string const &message) : m_msg(message) {}
-    virtual ~Exception() noexcept {}
+    capybot::bnet::Token::SharedPtr tokenPtr = std::make_shared<capybot::bnet::Token>();
+    tokenPtr->addContentBlock("type", nlohmann::json());
+    net->addToken(tokenPtr, "A");
+    net->addToken(tokenPtr, "A");
+    net->addToken(tokenPtr, "A");
 
-    virtual const char *what() const noexcept { return m_msg.c_str(); }
+    net->triggerTransition("T1");
+    net->prettyPrintState();
 
-protected:
-    std::string m_msg;
-};
+    net->triggerTransition("T1");
+    net->prettyPrintState();
 
-class RuntimeError : public Exception // TODO: error codes better?
-{
-public:
-    using Exception::Exception;
-};
+    net->triggerTransition("T2");
+    net->prettyPrintState();
 
-class LogicError : public Exception
-{
-public:
-    using Exception::Exception;
-};
+    net->triggerTransition("T1");
+    net->prettyPrintState();
 
-class InvalidValueError : public Exception
-{
-public:
-    using Exception::Exception;
-};
-
-
-class NotImplementedError : public Exception
-{
-public:
-    using Exception::Exception;
-};
-
-} // namespace bnet
-} // namespace capybot
-
-#endif // BEHAVIOR_NET_CPP_COMMON_HPP_
+    return 0;
+}

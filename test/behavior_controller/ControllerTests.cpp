@@ -15,34 +15,29 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef BEHAVIOR_NET_CPP_CONFIG_HPP_
-#define BEHAVIOR_NET_CPP_CONFIG_HPP_
+#include <catch2/catch_test_macros.hpp>
 
-#include <fstream>
+#include "behavior_net/Controller.hpp"
 
-#include <3rd_party/nlohmann/json.hpp>
+#include <chrono>
+#include <thread>
 
-namespace capybot
+using namespace capybot;
+
+TEST_CASE("The controller properly initialized from config files.", "[BehaviorController/Controller]")
 {
-namespace bnet
-{
+    auto config = bnet::NetConfig(
+        "config_samples/config.json"); // TODO: create test specific config once we have a stable config format
+    auto net = bnet::PetriNet::create(config);
+    bnet::Controller controller(config, std::move(net));
 
-class PetriNetConfig
-{
-public:
-    PetriNetConfig(std::string const &configFilePath)
-    {
-        std::ifstream file(configFilePath);
-        file >> m_config;
-    }
+    controller.addToken({}, "A");
+    controller.addToken({}, "A");
+    controller.addToken({}, "A");
 
-    const nlohmann::json &get() const { return m_config; }
+    controller.runDetached();
 
-private:
-    nlohmann::json m_config;
-};
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 
-} // namespace bnet
-} // namespace capybot
-
-#endif // BEHAVIOR_NET_CPP_CONFIG_HPP_
+    controller.stop();
+}

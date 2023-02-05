@@ -17,49 +17,50 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "petri_net/PetriNet.hpp"
+#include "behavior_net/PetriNet.hpp"
+#include "behavior_net/Config.hpp"
 
 using namespace capybot;
 
 std::unique_ptr<bnet::IPetriNet> createFromSampleConfig()
 {
-    auto config = bnet::PetriNetConfig(
+    auto config = bnet::NetConfig(
         "config_samples/config.json"); // TODO: create test specific config once we have a stable config format
-    return bnet::create(config);
+    return bnet::createPetriNet(config);
 }
 
 TEST_CASE("We can manually trigger transitions.", "[PetriNet]")
 {
     auto net = createFromSampleConfig();
 
-    bnet::Token::SharedPtr tokenPtr = std::make_shared<bnet::Token>();
-    tokenPtr->addContentBlock("type", nlohmann::json());
-    net->addToken(tokenPtr, "A");
-    net->addToken(tokenPtr, "A");
+    bnet::Token token;
+    token.addContentBlock("type", nlohmann::json());
+    net->addToken(token, "A");
+    net->addToken(token, "A");
 
     // initial marking as expected
     {
-        const auto m = net->getCurrentMarking();
-        REQUIRE(m.at("A") == 2);
-        REQUIRE(m.at("B") == 0);
-        REQUIRE(m.at("C") == 0);
-        REQUIRE(m.at("D") == 0);
+        const auto m = net->getMarking();
+        REQUIRE(m.countAt("A") == 2);
+        REQUIRE(m.countAt("B") == 0);
+        REQUIRE(m.countAt("C") == 0);
+        REQUIRE(m.countAt("D") == 0);
     }
 
     // marking as expected after triggering transitions
     {
-        net->triggerManualTransition("T1");
-        net->triggerManualTransition("T1");
-        const auto m = net->getCurrentMarking();
-        REQUIRE(m.at("A") == 0);
-        REQUIRE(m.at("B") == 2);
-        REQUIRE(m.at("C") == 2);
-        REQUIRE(m.at("D") == 0);
+        net->triggerTransition("T1");
+        net->triggerTransition("T1");
+        const auto m = net->getMarking();
+        REQUIRE(m.countAt("A") == 0);
+        REQUIRE(m.countAt("B") == 2);
+        REQUIRE(m.countAt("C") == 2);
+        REQUIRE(m.countAt("D") == 0);
     }
 
     // trigging disable transition should throw
     {
-        REQUIRE_THROWS_AS(net->triggerManualTransition("T1"), bnet::LogicError);
+        REQUIRE_THROWS_AS(net->triggerTransition("T1"), bnet::LogicError);
     }
 }
 
