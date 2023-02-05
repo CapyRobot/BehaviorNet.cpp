@@ -5,7 +5,7 @@ cc_library(
     srcs = [
         # "behavior_net/PetriNet.cpp"
     ],
-    hdrs = glob(["**/*.hpp"]) + glob(["**/*.cpp"]),
+    hdrs = glob(["**/*.hpp"]) + glob(["**/*.h"]) + glob(["**/*.cpp"]),
     # [
     #     "behavior_net/PetriNet.hpp",
     #     "behavior_net/Common.hpp",
@@ -27,5 +27,8 @@ cc_binary(
     copts = ["-std=c++20"],
     deps = [
         ":behavior_net_lib",
+    ],
+    data = [
+        "//config_samples:config_samples"
     ],
 )

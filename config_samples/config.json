@@ -62,7 +62,11 @@
     },
     "controller": {
         "thread_poll_workers": 4,
-        "epoch_period_ms": 100,
+        "epoch_period_ms": 1000,
+        "http_server": {
+            "address": "localhost",
+            "port": 8080
+        },
         "actions": [
             {
                 "place": "B",

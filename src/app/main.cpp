@@ -15,30 +15,18 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "behavior_net/PetriNet.hpp"
+#include "behavior_net/Controller.hpp"
+
+using namespace capybot;
 
 int main()
 {
-    auto config = capybot::bnet::NetConfig("/home/erocha/capybot/b-net/config_samples/config.json");
-    auto net = capybot::bnet::createPetriNet(config);
+    auto config = bnet::NetConfig("config_samples/config.json");
+    auto net = bnet::PetriNet::create(config);
 
-    capybot::bnet::Token::SharedPtr tokenPtr = std::make_shared<capybot::bnet::Token>();
-    tokenPtr->addContentBlock("type", nlohmann::json());
-    net->addToken(tokenPtr, "A");
-    net->addToken(tokenPtr, "A");
-    net->addToken(tokenPtr, "A");
+    bnet::Controller controller(config, std::move(net));
 
-    net->triggerTransition("T1");
-    net->prettyPrintState();
-
-    net->triggerTransition("T1");
-    net->prettyPrintState();
-
-    net->triggerTransition("T2");
-    net->prettyPrintState();
-
-    net->triggerTransition("T1");
-    net->prettyPrintState();
+    controller.run();
 
     return 0;
 }

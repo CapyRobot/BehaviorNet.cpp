@@ -21,6 +21,8 @@
 #include "behavior_net/Action.hpp"
 #include "behavior_net/PetriNet.hpp"
 
+#include "3rd_party/cpp-httplib/httplib.h"
+
 #include <iostream>
 
 namespace capybot
@@ -28,12 +30,59 @@ namespace capybot
 namespace bnet
 {
 
+class Controller;
+
+class HttpServer
+{
+
+public:
+    HttpServer(nlohmann::json const& config, Controller* controllerPtr)
+    : m_controller(controllerPtr), m_addr(config.at("address").get<std::string>()),
+      m_port(config.at("port").get<int>())
+    {
+        std::cout << config << std::endl;
+    }
+
+    void start()
+    {
+        m_executionThread = std::thread([this] { runServer(); });
+    }
+    void stop()
+    {
+        m_server->stop();
+        m_executionThread.join();
+    }
+
+private:
+    void runServer()
+    {
+        httplib::Server server;
+        m_server = &server;
+
+        server.Get("/hi", [](const httplib::Request& req, httplib::Response& res) {
+            std::cout << "HttpServer: received get request." << std::endl;
+            res.set_content("Hello World!", "text/plain");
+        });
+
+        server.listen(m_addr, m_port);
+    }
+
+    httplib::Server* m_server{nullptr};
+    Controller* m_controller;
+
+    std::string m_addr;
+    int m_port;
+
+    std::thread m_executionThread;
+};
+
 class Controller
 {
 public:
     Controller(NetConfig const& config, std::unique_ptr<PetriNet> petriNet)
         : m_tp(config.get().at("controller").at("thread_poll_workers").get<uint32_t>()),
-          m_config(config.get().at("controller")), m_net(std::move(petriNet))
+          m_config(config.get().at("controller")), m_net(std::move(petriNet)),
+          m_httpServer(config.get().at("controller").at("http_server"), this)
     {
         Place::createActions(m_tp, config.get().at("controller").at("actions"), m_net->getPlaces());
     }
@@ -55,6 +104,7 @@ public:
     void run()
     {
         m_running.store(true);
+        m_httpServer.start();
         while (m_running.load())
         {
             runEpoch();
@@ -70,6 +120,7 @@ public:
     void stop()
     {
         m_running.store(false);
+        m_httpServer.stop();
         if (m_runDetachedThread.joinable())
         {
             m_runDetachedThread.join();
@@ -78,9 +129,8 @@ public:
 
     void runEpoch()
     {
-        log::timePoint("runEpoch start...");
+        // log::timePoint("runEpoch start...");
         const uint32_t periodMs = m_config.at("epoch_period_ms").get<uint32_t>();
-        // const uint32_t sleepMs = std::max(1U, periodMs / 10U);
 
         // execute all actions
         for (auto&& [_, place] : m_net->getPlaces())
@@ -118,6 +168,8 @@ private:
     std::thread m_runDetachedThread;
 
     std::unique_ptr<PetriNet> m_net;
+
+    HttpServer m_httpServer;
 };
 
 } // namespace bnet
