@@ -19,9 +19,9 @@
 #define BEHAVIOR_NET_CPP_COMMON_HPP_
 
 #include <exception>
+#include <mutex>
 #include <sstream>
 #include <string>
-#include <mutex>
 
 namespace capybot
 {

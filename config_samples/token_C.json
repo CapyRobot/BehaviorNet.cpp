@@ -1,0 +1,12 @@
+{
+    "place_id": "C",
+    "content_blocks": [
+        {
+            "key": "robot",
+            "content": {
+                "host": "localhost",
+                "port": 8090
+            }
+        }
+    ]
+}

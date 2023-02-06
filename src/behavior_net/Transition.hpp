@@ -60,8 +60,7 @@ public:
         } type;
     };
 
-    Transition(nlohmann::json config, Place::IdMap const& places)
-        : m_id(config.at("transition_id").get<std::string>())
+    Transition(nlohmann::json config, Place::IdMap const& places) : m_id(config.at("transition_id").get<std::string>())
     {
         {
             const auto typeStr = config.at("transition_type").get<std::string>();

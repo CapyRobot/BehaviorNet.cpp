@@ -37,8 +37,9 @@ class HttpServer
 
 public:
     HttpServer(nlohmann::json const& config, Controller* controllerPtr)
-    : m_controller(controllerPtr), m_addr(config.at("address").get<std::string>()),
-      m_port(config.at("port").get<int>())
+        : m_controller(controllerPtr)
+        , m_addr(config.at("address").get<std::string>())
+        , m_port(config.at("port").get<int>())
     {
         std::cout << config << std::endl;
     }
@@ -59,13 +60,32 @@ private:
         httplib::Server server;
         m_server = &server;
 
-        server.Get("/hi", [](const httplib::Request& req, httplib::Response& res) {
-            std::cout << "HttpServer: received get request." << std::endl;
-            res.set_content("Hello World!", "text/plain");
+        setCallbacks(server);
+
+        // TODO proper error handling
+        server.set_exception_handler([](const auto& req, auto& res, std::exception_ptr ep) {
+            auto fmt = "<h1>Error 500</h1><p>%s</p>";
+            char buf[BUFSIZ];
+            try
+            {
+                std::rethrow_exception(ep);
+            }
+            catch (std::exception& e)
+            {
+                snprintf(buf, sizeof(buf), fmt, e.what());
+            }
+            catch (...)
+            { // See the following NOTE
+                snprintf(buf, sizeof(buf), fmt, "Unknown Exception");
+            }
+            res.set_content(buf, "text/html");
+            res.status = 500;
         });
 
         server.listen(m_addr, m_port);
     }
+
+    void setCallbacks(httplib::Server& server);
 
     httplib::Server* m_server{nullptr};
     Controller* m_controller;
@@ -80,9 +100,10 @@ class Controller
 {
 public:
     Controller(NetConfig const& config, std::unique_ptr<PetriNet> petriNet)
-        : m_tp(config.get().at("controller").at("thread_poll_workers").get<uint32_t>()),
-          m_config(config.get().at("controller")), m_net(std::move(petriNet)),
-          m_httpServer(config.get().at("controller").at("http_server"), this)
+        : m_tp(config.get().at("controller").at("thread_poll_workers").get<uint32_t>())
+        , m_config(config.get().at("controller"))
+        , m_net(std::move(petriNet))
+        , m_httpServer(config.get().at("controller").at("http_server"), this)
     {
         Place::createActions(m_tp, config.get().at("controller").at("actions"), m_net->getPlaces());
     }
@@ -156,8 +177,8 @@ public:
             }
         }
 
-        log::timePoint("runEpoch ... done");
-        m_net->prettyPrintState();
+        // log::timePoint("runEpoch ... done");
+        // m_net->prettyPrintState();
     }
 
 private:
@@ -171,6 +192,15 @@ private:
 
     HttpServer m_httpServer;
 };
+
+void HttpServer::setCallbacks(httplib::Server& server)
+{
+    server.Post("/add_token", [this](const httplib::Request& req, httplib::Response& res) {
+        nlohmann::json payload = nlohmann::json::parse(req.body);
+        m_controller->addToken(payload.at("content_blocks"), payload.at("place_id").get<std::string>());
+        res.set_content("success!", "application/json");
+    });
+}
 
 } // namespace bnet
 } // namespace capybot

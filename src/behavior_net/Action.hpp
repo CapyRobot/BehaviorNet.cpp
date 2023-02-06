@@ -21,6 +21,7 @@
 
 #include "behavior_net/Token.hpp"
 
+#include "3rd_party/cpp-httplib/httplib.h"
 #include "3rd_party/taskflow/taskflow.hpp"
 
 #include <chrono>
@@ -33,6 +34,36 @@ namespace capybot
 {
 namespace bnet
 {
+
+namespace helpers
+{
+inline std::string getContentBetweenChars(const std::string& str, char start, char end)
+{
+    size_t startPos = str.find(start);
+    if (startPos == std::string::npos)
+        return "";
+
+    size_t endPos = str.find(end, startPos + 1);
+    if (endPos == std::string::npos)
+        return "";
+
+    return str.substr(startPos + 1, endPos - startPos - 1);
+}
+
+inline std::vector<std::string> split(const std::string& str, char delimiter)
+{
+    std::vector<std::string> tokens;
+    size_t start = 0;
+    size_t end = 0;
+    while ((end = str.find(delimiter, start)) != std::string::npos)
+    {
+        tokens.push_back(str.substr(start, end - start));
+        start = end + 1;
+    }
+    tokens.push_back(str.substr(start));
+    return tokens;
+}
+} // namespace helpers
 
 enum ActionExecutionStatus
 {
@@ -121,7 +152,9 @@ struct ActionExecutionUnit
     uint32_t delayedEpochs;
 
     ActionExecutionUnit(uint64_t id, std::function<ActionExecutionStatus()> func, uint32_t delay = 0)
-        : tokenId(id), task(func), delayedEpochs(delay)
+        : tokenId(id)
+        , task(func)
+        , delayedEpochs(delay)
     {
     }
 };
@@ -147,25 +180,29 @@ public:
         enum ActionType
         {
             ACTION_TYPE_SLEEP = 0,
+            ACTION_TYPE_HTTP_GET
         };
 
         static ActionType typeFromStr(std::string const& typeStr)
         {
             static const std::unordered_map<std::string, ActionType> s_typeStrMap = {
-                {"ACTION_TYPE_SLEEP", ACTION_TYPE_SLEEP}};
+                {"ACTION_TYPE_SLEEP", ACTION_TYPE_SLEEP}, {"ACTION_TYPE_HTTP_GET", ACTION_TYPE_HTTP_GET}};
             return s_typeStrMap.at(typeStr);
         }
 
         static UniquePtr create(ThreadPool& tp, ActionType type, nlohmann::json const parameters)
         {
             UniquePtr action = std::make_unique<Action>(tp); // do we really need to deal with pointers here?
-            switch (type)
+            switch (type)                                    // TODO: to tag specializaton patter
             {
             case ACTION_TYPE_SLEEP: {
                 action->m_actionImpl = std::make_unique<SleepAction>(parameters);
                 break;
             }
-
+            case ACTION_TYPE_HTTP_GET: {
+                action->m_actionImpl = std::make_unique<HttpGetAction>(parameters);
+                break;
+            }
             default:
                 break;
             }
@@ -272,24 +309,93 @@ private:
 
     std::unique_ptr<IActionImpl> m_actionImpl{};
 
+    template <typename T>
+    static T getConfigParam(nlohmann::json const& configParam, Token const& token) // TODO: to container
+    {
+        auto const str = configParam.get<std::string>();
+        if (str.find("@token") != std::string::npos)
+        {
+            const auto path = helpers::split(helpers::getContentBetweenChars(str, '{', '}'), '.');
+            const auto contentBlockKey = path.at(0);
+            nlohmann::json data = token.getContent(contentBlockKey);
+            for (auto it = path.begin() + 1; it != path.end(); ++it)
+            {
+                data = data.at(*it);
+            }
+            return data.get<T>();
+        }
+        else
+        {
+            return configParam.get<T>();
+        }
+    }
+
     class SleepAction : public IActionImpl
     {
     public:
-        SleepAction(nlohmann::json const config) : m_durationMs(config.at("duration_ms").get<uint32_t>()) {}
+        SleepAction(nlohmann::json const config) : m_durationMs(config.at("duration_ms")) {}
 
         std::function<ActionExecutionStatus()> createCallable(Token const& token) override
         {
-            std::ignore = token;
-            return [duration = m_durationMs]() -> ActionExecutionStatus {
-                log::timePoint("SleepAction start...");
-                std::this_thread::sleep_for(duration);
-                log::timePoint("SleepAction ... done");
+            uint32_t durationMs = getConfigParam<uint32_t>(m_durationMs, token);
+            return [durationMs]() -> ActionExecutionStatus {
+                std::this_thread::sleep_for(std::chrono::milliseconds(durationMs));
                 return ACTION_EXEC_STATUS_COMPLETED_SUCCESS;
             };
         }
 
     private:
-        const std::chrono::milliseconds m_durationMs;
+        // keeping a json object and not a number because the config paramerter may be dependent on the token, i.e.,
+        // '@token{...}'
+        const nlohmann::json m_durationMs;
+    };
+
+    class HttpGetAction : public IActionImpl
+    {
+    public:
+        HttpGetAction(nlohmann::json const config)
+            : m_host(config.at("host"))
+            , m_port(config.at("port"))
+            , m_path(config.at("path"))
+        {
+        }
+
+        std::function<ActionExecutionStatus()> createCallable(Token const& token) override
+        {
+            auto host = getConfigParam<std::string>(m_host, token);
+            auto port = getConfigParam<int>(m_port, token);
+            auto path = getConfigParam<std::string>(m_path, token);
+
+            return [host, port, path]() -> ActionExecutionStatus {
+                httplib::Client cli(host, port);
+                auto res = cli.Get(path);
+
+                if (res->status < 200 && res->status >= 300)
+                {
+                    std::cout << "HttpGetAction :: ACTION_EXEC_STATUS_COMPLETED_FAILURE" << std::endl;
+                    return ACTION_EXEC_STATUS_COMPLETED_FAILURE;
+                }
+                if (res->body == "success")
+                {
+                    std::cout << "HttpGetAction :: ACTION_EXEC_STATUS_COMPLETED_SUCCESS" << std::endl;
+                    return ACTION_EXEC_STATUS_COMPLETED_SUCCESS;
+                }
+                else if (res->body == "in_progress")
+                {
+                    std::cout << "HttpGetAction :: ACTION_EXEC_STATUS_COMPLETED_IN_PROGRESS" << std::endl;
+                    return ACTION_EXEC_STATUS_COMPLETED_IN_PROGRESS;
+                }
+                std::cout << "HttpGetAction :: ACTION_EXEC_STATUS_COMPLETED_FAILURE" << std::endl;
+                return ACTION_EXEC_STATUS_COMPLETED_FAILURE;
+            };
+        }
+
+    private:
+        // keeping a json object and not a number because the config paramerter may be dependent on the token, i.e.,
+        // '@token{...}'
+        const nlohmann::json m_host;
+        const nlohmann::json m_port;
+        const nlohmann::json m_path;
     };
 };
 

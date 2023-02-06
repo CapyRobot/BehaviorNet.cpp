@@ -2,9 +2,13 @@
 Language: Cpp
 BasedOnStyle: Microsoft
 AccessModifierOffset: -4
+AllowAllArgumentsOnNextLine: true
 AlwaysBreakTemplateDeclarations: Yes
 AllowShortFunctionsOnASingleLine: Inline
+ArrayInitializerAlignmentStyle: Right
+BreakConstructorInitializers: BeforeComma
 ColumnLimit: 120
+PackConstructorInitializers: CurrentLine
 PointerAlignment: Left
 ReferenceAlignment: Left
 TabWidth: 8

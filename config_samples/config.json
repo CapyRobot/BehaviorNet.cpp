@@ -74,6 +74,15 @@
                 "params": {
                     "duration_ms": 250
                 }
+            },
+            {
+                "place": "C",
+                "type": "ACTION_TYPE_HTTP_GET",
+                "params": {
+                    "host": "@token{robot.host}",
+                    "port": "@token{robot.port}",
+                    "path": "/action/c"
+                }
             }
         ]
     },

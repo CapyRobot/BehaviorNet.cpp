@@ -30,13 +30,13 @@ namespace bnet
 class NetConfig
 {
 public:
-    NetConfig(std::string const &configFilePath)
+    NetConfig(std::string const& configFilePath)
     {
         std::ifstream file(configFilePath);
         file >> m_config;
     }
 
-    const nlohmann::json &get() const { return m_config; }
+    const nlohmann::json& get() const { return m_config; }
 
 private:
     nlohmann::json m_config;

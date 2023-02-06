@@ -1,0 +1,17 @@
+{
+    "place_id": "B",
+    "content_blocks": [
+        {
+            "key": "block_0",
+            "content": {
+                "xyz": 123
+            }
+        },
+        {
+            "key": "block_1",
+            "content": {
+                "abc": 321
+            }
+        }
+    ]
+}
