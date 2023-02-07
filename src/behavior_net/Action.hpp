@@ -69,6 +69,7 @@ enum ActionExecutionStatus
 {
     ACTION_EXEC_STATUS_COMPLETED_SUCCESS = 0,
     ACTION_EXEC_STATUS_COMPLETED_FAILURE,
+    ACTION_EXEC_STATUS_COMPLETED_ERROR,
     ACTION_EXEC_STATUS_COMPLETED_IN_PROGRESS, // add COMPLETED
     ACTION_EXEC_STATUS_QUERRY_TIMEOUT,
     ACTION_EXEC_STATUS_NOT_STARTED,
@@ -95,7 +96,7 @@ public:
                 m_started = true;
                 m_done = false;
             }
-            m_return = m_func();
+            m_return = m_func(); // TODO: try? it can be user provided code
             {
                 std::lock_guard<std::mutex> lk(m_mtx);
                 m_done = true;
@@ -220,7 +221,7 @@ public:
         }
     };
 
-    void executeAsync(std::vector<Token> tokens)
+    void executeAsync(std::list<Token> const& tokens)
     {
         if (!m_epochExecutions.empty())
         {
@@ -356,54 +357,103 @@ private:
         HttpGetAction(nlohmann::json const config)
             : m_host(config.at("host"))
             , m_port(config.at("port"))
-            , m_path(config.at("path"))
+            , m_executePath(config.at("execute_path"))
+            , m_getStatusPath(config.at("get_status_path"))
         {
         }
 
         std::function<ActionExecutionStatus()> createCallable(Token const& token) override
         {
-            auto host = getConfigParam<std::string>(m_host, token);
-            auto port = getConfigParam<int>(m_port, token);
-            auto path = getConfigParam<std::string>(m_path, token);
+            return [&token, this]() -> ActionExecutionStatus {
+                auto host = getConfigParam<std::string>(m_host, token);
+                auto port = getConfigParam<int>(m_port, token);
+                auto executePath = getConfigParam<std::string>(m_executePath, token);
+                auto getStatusPath = getConfigParam<std::string>(m_getStatusPath, token);
 
-            return [host, port, path]() -> ActionExecutionStatus {
-                httplib::Client cli(host, port);
-                auto res = cli.Get(path);
+                auto const actionId = host + std::to_string(port) + executePath;
+                bool const isInExecution = std::find(m_inExec.begin(), m_inExec.end(), actionId) != m_inExec.end();
 
-                if (!res)
+                ActionExecutionStatus retStatus;
+                if (isInExecution)
                 {
-                    auto err = res.error();
-                    std::cout << "HttpGetAction :: HTTP error: " << httplib::to_string(err) << std::endl;
-                    std::cout << "HttpGetAction :: ACTION_EXEC_STATUS_COMPLETED_FAILURE" << std::endl;
-                    return ACTION_EXEC_STATUS_COMPLETED_FAILURE;
+                    retStatus = request(host, port, getStatusPath);
+                    if (retStatus != ACTION_EXEC_STATUS_COMPLETED_IN_PROGRESS)
+                    {
+                        m_inExec.remove(actionId);
+                    }
                 }
-
-                if (res->status < 200 && res->status >= 300)
+                else
                 {
-                    std::cout << "HttpGetAction :: ACTION_EXEC_STATUS_COMPLETED_FAILURE" << std::endl;
-                    return ACTION_EXEC_STATUS_COMPLETED_FAILURE;
+                    retStatus = request(host, port, executePath);
+                    if (retStatus == ACTION_EXEC_STATUS_COMPLETED_IN_PROGRESS)
+                    {
+                        m_inExec.push_back(actionId);
+                    }
                 }
-                if (res->body == "success")
-                {
-                    std::cout << "HttpGetAction :: ACTION_EXEC_STATUS_COMPLETED_SUCCESS" << std::endl;
-                    return ACTION_EXEC_STATUS_COMPLETED_SUCCESS;
-                }
-                else if (res->body == "in_progress")
-                {
-                    std::cout << "HttpGetAction :: ACTION_EXEC_STATUS_COMPLETED_IN_PROGRESS" << std::endl;
-                    return ACTION_EXEC_STATUS_COMPLETED_IN_PROGRESS;
-                }
-                std::cout << "HttpGetAction :: ACTION_EXEC_STATUS_COMPLETED_FAILURE" << std::endl;
-                return ACTION_EXEC_STATUS_COMPLETED_FAILURE;
+                return retStatus;
             };
         }
 
     private:
+        ActionExecutionStatus request(std::string const& host, int port, std::string const& path)
+        {
+            httplib::Client client(host, port);
+            httplib::Result res = client.Get(path);
+
+            std::stringstream logMsg;
+            logMsg << "HttpGetAction :: requesting @ " << host << ":" << port << path << " ... ";
+
+            ActionExecutionStatus retStatus;
+            if (!res)
+            {
+                auto err = res.error();
+                logMsg << "ERROR; HTTP error: " << httplib::to_string(err) << "\n";
+                retStatus = ACTION_EXEC_STATUS_COMPLETED_ERROR;
+            }
+            else if (res->status < 200 && res->status >= 300)
+            {
+                logMsg << "ERROR; response status code: " << res->status << "\n";
+                retStatus = ACTION_EXEC_STATUS_COMPLETED_ERROR;
+            }
+            else if (res->body == "ACTION_EXEC_STATUS_COMPLETED_SUCCESS")
+            {
+                logMsg << "Received SUCCESS; response status code: " << res->status << "\n";
+                retStatus = ACTION_EXEC_STATUS_COMPLETED_SUCCESS;
+            }
+            else if (res->body == "ACTION_EXEC_STATUS_COMPLETED_IN_PROGRESS")
+            {
+                logMsg << "Received IN_PROGRESS; response status code: " << res->status << "\n";
+                retStatus = ACTION_EXEC_STATUS_COMPLETED_IN_PROGRESS;
+            }
+            else if (res->body == "ACTION_EXEC_STATUS_COMPLETED_FAILURE")
+            {
+                logMsg << "Received FAILURE; response status code: " << res->status << "\n";
+                retStatus = ACTION_EXEC_STATUS_COMPLETED_FAILURE;
+            }
+            else if (res->body == "ACTION_EXEC_STATUS_COMPLETED_ERROR")
+            {
+                logMsg << "Received ERROR; response status code: " << res->status << "\n";
+                retStatus = ACTION_EXEC_STATUS_COMPLETED_ERROR;
+            }
+            else
+            {
+                logMsg << "ERROR; response status code: " << res->status
+                       << "; unrecognized response body: " << res->body << "\n";
+                retStatus = ACTION_EXEC_STATUS_COMPLETED_ERROR;
+            }
+
+            std::cout << logMsg.str() << std::flush;
+            return retStatus;
+        }
+
         // keeping a json object and not a number because the config paramerter may be dependent on the token, i.e.,
         // '@token{...}'
         const nlohmann::json m_host;
         const nlohmann::json m_port;
-        const nlohmann::json m_path;
+        const nlohmann::json m_executePath;
+        const nlohmann::json m_getStatusPath;
+
+        std::list<std::string> m_inExec;
     };
 };
 

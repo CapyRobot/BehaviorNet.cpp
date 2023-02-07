@@ -72,7 +72,7 @@
                 "place": "B",
                 "type": "ACTION_TYPE_SLEEP",
                 "params": {
-                    "duration_ms": 250
+                    "duration_ms": 3000
                 }
             },
             {
@@ -81,7 +81,8 @@
                 "params": {
                     "host": "@token{robot.host}",
                     "port": "@token{robot.port}",
-                    "path": "/action/c"
+                    "execute_path": "/execute/goto_fast",
+                    "get_status_path": "/get_status/goto_fast"
                 }
             }
         ]

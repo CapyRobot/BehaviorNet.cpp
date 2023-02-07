@@ -110,6 +110,10 @@ public:
                 {
                     dest = &m_tokensAvailable; // TODO
                 }
+                else if (result.status == ACTION_EXEC_STATUS_COMPLETED_ERROR)
+                {
+                    dest = &m_tokensAvailable; // TODO
+                }
                 else
                 {
                     continue;
@@ -131,14 +135,15 @@ public:
     uint32_t getNumberTokensAvailable() const { return m_tokensAvailable.size(); }
     uint32_t getNumberTokensBusy() const { return m_tokensBusy.size(); }
     uint32_t getNumberTokensTotal() const { return m_tokensBusy.size() + m_tokensAvailable.size(); }
-    std::vector<Token> getTokensAvailable() const { return {m_tokensAvailable.begin(), m_tokensAvailable.end()}; }
-    std::vector<Token> getTokensBusy() const { return {m_tokensBusy.begin(), m_tokensBusy.end()}; }
+    std::list<Token> const& getTokensAvailable() const { return m_tokensAvailable; }
+    std::list<Token> const& getTokensBusy() const { return m_tokensBusy; }
     std::string const& getId() const { return m_id; }
 
 private:
     std::string m_id;
     Action::UniquePtr m_action;
 
+    // TODO: sending references of tokens deep down the stack is problematic. One erroneous copy somewhere and ... :(
     std::list<Token> m_tokensAvailable; // ready to be consumed
     std::list<Token> m_tokensBusy;      // either in action exec or waiting for exec
 };
