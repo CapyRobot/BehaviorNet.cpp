@@ -188,6 +188,8 @@ public:
         // m_net->prettyPrintState();
     }
 
+    PetriNet const& getNet() const { return *m_net; }
+
 private:
     ThreadPool m_tp;
     nlohmann::json const& m_config;
@@ -206,6 +208,10 @@ void HttpServer::setCallbacks(httplib::Server& server)
         nlohmann::json payload = nlohmann::json::parse(req.body);
         m_controller->addToken(payload.at("content_blocks"), payload.at("place_id").get<std::string>());
         res.set_content("success!", "application/json");
+    });
+    server.Get("/get_marking", [this](const httplib::Request& req, httplib::Response& res) {
+        nlohmann::json marking = m_controller->getNet().getMarking();
+        res.set_content(marking.dump(), "application/json");
     });
 }
 

@@ -39,7 +39,7 @@ public:
         return std::make_unique<PetriNet>(config.get().at("petri_net"));
     }
 
-    PetriNet(nlohmann::json const& config)
+    PetriNet(nlohmann::json const& config) : m_config(config)
     {
         m_places = Place::createPlaces(config);
         m_transitions = Transition::createTransitions(config, m_places);
@@ -100,7 +100,21 @@ public:
     auto& getTransitions() { return m_transitions; }
     auto& getPlaces() { return m_places; }
 
+    nlohmann::json getMarking() const
+    {
+        nlohmann::json m;
+        m["config"] = m_config;
+        m["marking"] = {};
+        for (auto&& [id, placePtr] : m_places)
+        {
+            m["marking"][id] = placePtr->getNumberTokensTotal();
+        }
+        return m;
+    }
+
 private:
+    nlohmann::json m_config;
+
     Place::IdMap m_places; // why shared ptr?
     std::vector<Transition> m_transitions;
 
