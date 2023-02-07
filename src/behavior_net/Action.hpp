@@ -370,6 +370,14 @@ private:
                 httplib::Client cli(host, port);
                 auto res = cli.Get(path);
 
+                if (!res)
+                {
+                    auto err = res.error();
+                    std::cout << "HttpGetAction :: HTTP error: " << httplib::to_string(err) << std::endl;
+                    std::cout << "HttpGetAction :: ACTION_EXEC_STATUS_COMPLETED_FAILURE" << std::endl;
+                    return ACTION_EXEC_STATUS_COMPLETED_FAILURE;
+                }
+
                 if (res->status < 200 && res->status >= 300)
                 {
                     std::cout << "HttpGetAction :: ACTION_EXEC_STATUS_COMPLETED_FAILURE" << std::endl;

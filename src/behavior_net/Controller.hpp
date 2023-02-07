@@ -62,7 +62,7 @@ private:
 
         setCallbacks(server);
 
-        // TODO proper error handling
+        // TODO: proper error handling
         server.set_exception_handler([](const auto& req, auto& res, std::exception_ptr ep) {
             auto fmt = "<h1>Error 500</h1><p>%s</p>";
             char buf[BUFSIZ];
@@ -75,11 +75,18 @@ private:
                 snprintf(buf, sizeof(buf), fmt, e.what());
             }
             catch (...)
-            { // See the following NOTE
+            {
                 snprintf(buf, sizeof(buf), fmt, "Unknown Exception");
             }
             res.set_content(buf, "text/html");
             res.status = 500;
+        });
+
+        server.set_error_handler([](const auto& req, auto& res) {
+            auto fmt = "<p>Error Status: <span style='color:red;'>%d</span></p>";
+            char buf[BUFSIZ];
+            snprintf(buf, sizeof(buf), fmt, res.status);
+            res.set_content(buf, "text/html");
         });
 
         server.listen(m_addr, m_port);
