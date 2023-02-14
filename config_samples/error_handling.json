@@ -1,0 +1,110 @@
+{
+    "config_metadata": {
+        "version": "0.1",
+        "id": "error_handling_example",
+        "authors": [
+            "capybot<e@capybot.com>"
+        ]
+    },
+    "petri_net": {
+        "places": [
+            {
+                "place_id": "task_queue"
+            },
+            {
+                "place_id": "task_execution"
+            },
+            {
+                "place_id": "finished_tasks_success"
+            },
+            {
+                "place_id": "finished_tasks_failure"
+            },
+            {
+                "place_id": "finished_tasks_error"
+            }
+        ],
+        "transitions": [
+            {
+                "transition_id": "execute",
+                "transition_arcs": [
+                    {
+                        "place_id": "task_queue",
+                        "type": "input"
+                    },
+                    {
+                        "place_id": "task_execution",
+                        "type": "output"
+                    }
+                ]
+            },
+            {
+                "transition_id": "finished_success",
+                "transition_arcs": [
+                    {
+                        "place_id": "task_execution",
+                        "type": "input"
+                    },
+                    {
+                        "place_id": "finished_tasks_success",
+                        "type": "output",
+                        "action_result_filter": [
+                            "SUCCESS"
+                        ]
+                    }
+                ]
+            },
+            {
+                "transition_id": "finished_failure",
+                "transition_arcs": [
+                    {
+                        "place_id": "task_execution",
+                        "type": "input"
+                    },
+                    {
+                        "place_id": "finished_tasks_failure",
+                        "type": "output",
+                        "action_result_filter": [
+                            "FAILURE"
+                        ]
+                    }
+                ]
+            },
+            {
+                "transition_id": "finished_error",
+                "transition_arcs": [
+                    {
+                        "place_id": "task_execution",
+                        "type": "input"
+                    },
+                    {
+                        "place_id": "finished_tasks_error",
+                        "type": "output",
+                        "action_result_filter": [
+                            "ERROR"
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "controller": {
+        "thread_poll_workers": 4,
+        "epoch_period_ms": 100,
+        "http_server": {
+            "address": "localhost",
+            "port": 8080
+        },
+        "actions": [
+            {
+                "place": "execute",
+                "type": "ACTION_TYPE_SLEEP",
+                "params": {
+                    "duration_ms": 3000,
+                    "failure_rate": 0.25,
+                    "error_rate": 0.25
+                }
+            }
+        ]
+    }
+}

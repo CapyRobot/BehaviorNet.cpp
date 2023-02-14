@@ -29,6 +29,7 @@
 #include <list>
 #include <mutex>
 #include <queue>
+#include <random>
 
 namespace capybot
 {
@@ -313,7 +314,7 @@ private:
     std::unique_ptr<IActionImpl> m_actionImpl{};
 
     template <typename T>
-    static T getConfigParam(nlohmann::json const& configParam, Token const& token) // TODO: to container
+    static T getConfigParam(nlohmann::json const& configParam, Token const& token) // TODO: to container, + add range
     {
         auto const str = configParam.get<std::string>();
         if (str.find("@token") != std::string::npos)
@@ -333,17 +334,32 @@ private:
         }
     }
 
-    class SleepAction : public IActionImpl
+    class SleepAction : public IActionImpl // TODO: these should be separate actions
     {
     public:
-        SleepAction(nlohmann::json const config) : m_durationMs(config.at("duration_ms")) {}
+        SleepAction(nlohmann::json const config)
+            : m_durationMs(config.at("duration_ms"))
+            , m_failureRate(config.contains("failure_rate") ? config.at("failure_rate") : nlohmann::json{0.f})
+            , m_errorRate(config.contains("error_rate") ? config.at("error_rate") : nlohmann::json{0.f})
+            , m_rd()
+            , m_gen(m_rd)
+        {
+        }
 
         std::function<ActionExecutionStatus()> createCallable(Token const& token) override
         {
             uint32_t durationMs = getConfigParam<uint32_t>(m_durationMs, token);
-            return [durationMs]() -> ActionExecutionStatus {
+
+            float failureRate = getConfigParam<float>(m_failureRate, token);
+            float errorRate = getConfigParam<float>(errorRate, token);
+            float successRate = 1.f - failureRate - errorRate;
+
+            std::discrete_distribution<> d({successRate, failureRate, errorRate});
+            const auto result = static_cast<ActionExecutionStatus>(1 << d(m_gen));
+
+            return [durationMs, result]() -> ActionExecutionStatus {
                 std::this_thread::sleep_for(std::chrono::milliseconds(durationMs));
-                return ACTION_EXEC_STATUS_COMPLETED_SUCCESS;
+                return result;
             };
         }
 
@@ -351,6 +367,11 @@ private:
         // keeping a json object and not a number because the config paramerter may be dependent on the token, i.e.,
         // '@token{...}'
         const nlohmann::json m_durationMs;
+        const nlohmann::json m_failureRate;
+        const nlohmann::json m_errorRate;
+
+        std::random_device m_rd;
+        std::mt19937 m_gen;
     };
 
     class HttpGetAction : public IActionImpl
