@@ -137,6 +137,8 @@ public:
 
     std::string const& getId() const { return m_id; }
 
+    bool isManual() const { return m_type == TRANSITION_TYPE_MANUAL; }
+
     bool isEnabled() const
     {
         for (auto&& arc : m_inputArcs)

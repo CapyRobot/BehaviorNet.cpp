@@ -78,13 +78,19 @@ public:
         }
     }
 
-    void triggerTransition(std::string_view const& id)
+    void triggerTransition(std::string_view const& id, bool assertIsManual = false)
     {
         bool exists{false};
         for (auto&& transition : m_transitions)
         {
             if (transition.getId() == id)
             {
+                if (assertIsManual && !transition.isManual())
+                {
+                    throw LogicError("PetriNet::triggerTransition: trying to manually trigger auto transition: " +
+                                     std::string(id));
+                }
+
                 exists = true;
                 transition.trigger();
             }

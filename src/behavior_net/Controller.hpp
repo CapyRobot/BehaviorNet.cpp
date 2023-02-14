@@ -175,10 +175,15 @@ public:
             place->checkActionResults();
         }
 
-        // fire all enabled transitions
+        // fire all enabled auto transitions
         for (auto&& t : m_net->getTransitions())
         {
-            while (t.isEnabled()) // TODO
+            if (t.isManual())
+                continue;
+
+            // current logic is to trigger a transition only once per epoch
+            // TODO: this should be configurable as this logic does not fulfill all use cases
+            if (t.isEnabled())
             {
                 t.trigger();
             }
@@ -189,6 +194,7 @@ public:
     }
 
     PetriNet const& getNet() const { return *m_net; }
+    PetriNet& getNet() { return *m_net; }
 
 private:
     ThreadPool m_tp;
@@ -212,6 +218,10 @@ void HttpServer::setCallbacks(httplib::Server& server)
     server.Get("/get_marking", [this](const httplib::Request& req, httplib::Response& res) {
         nlohmann::json marking = m_controller->getNet().getMarking();
         res.set_content(marking.dump(), "application/json");
+    });
+    server.Post("/trigger_manual_transition/(.*)", [this](const httplib::Request& req, httplib::Response& res) {
+        auto id = req.matches[1];
+        m_controller->getNet().triggerTransition(id.str(), true);
     });
 }
 
