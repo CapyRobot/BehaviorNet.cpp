@@ -23,6 +23,7 @@
 #include "behavior_net/Token.hpp"
 
 #include <3rd_party/nlohmann/json.hpp>
+#include <regex>
 #include <vector>
 
 namespace capybot
@@ -58,6 +59,8 @@ public:
             ARC_TYPE_PLACE_TO_TRANSITION = 0,
             ARC_TYPE_TRANSITION_TO_PLACE
         } type;
+        ActionExecutionStatusBitmask resultStatusFilter{0U};
+        std::optional<std::regex> contentBlockFilter; // TODO: to separate struct (+ helper methods)
     };
 
     Transition(nlohmann::json config, Place::IdMap const& places) : m_id(config.at("transition_id").get<std::string>())
@@ -88,7 +91,7 @@ public:
             //     throw InvalidValueError("Transition::Transition: place with this id does not exist: " + placeId);
             // }
 
-            const auto typeStr = arcConfig.at("arc_type").get<std::string>();
+            const auto typeStr = arcConfig.at("type").get<std::string>();
             if (typeStr == "output")
             {
                 arc.type = Arc::ARC_TYPE_TRANSITION_TO_PLACE;
@@ -103,6 +106,32 @@ public:
             {
                 throw InvalidValueError("Transition::Transition: unknown arc type: " + typeStr);
             }
+
+            if (arcConfig.contains("action_result_filter"))
+            {
+                // TODO: assert is input
+                // TODO: this does not belong here? Maybe
+                static const std::map<std::string, ActionExecutionStatus> strStatusMap{
+                    {"SUCCESS", ACTION_EXEC_STATUS_COMPLETED_SUCCESS},
+                    {"FAILURE", ACTION_EXEC_STATUS_COMPLETED_FAILURE},
+                    {"ERROR", ACTION_EXEC_STATUS_COMPLETED_ERROR},
+                };
+
+                for (auto const& status : arcConfig.at("action_result_filter"))
+                {
+                    arc.resultStatusFilter |= strStatusMap.at(status.get<std::string>());
+                }
+            }
+            else
+            {
+                arc.resultStatusFilter = 0U;
+            }
+
+            if (arcConfig.contains("token_content_filter"))
+            {
+                // TODO: assert is output
+                arc.contentBlockFilter = std::regex(arcConfig.at("token_content_filter").get<std::string>());
+            }
         }
     }
 
@@ -112,14 +141,10 @@ public:
     {
         for (auto&& arc : m_inputArcs)
         {
-            if (arc.place->getNumberTokensAvailable() == 0)
+            if (arc.place->getNumberTokensAvailable(arc.resultStatusFilter) == 0)
             {
                 return false;
             }
-        }
-        for (auto&& arc : m_outputArcs)
-        {
-            // TODO: at capacity?
         }
         return true;
     }
@@ -134,7 +159,7 @@ public:
         std::vector<Token> consumedTokens;
         for (auto&& arc : m_inputArcs)
         {
-            consumedTokens.push_back(arc.place->consumeToken());
+            consumedTokens.push_back(arc.place->consumeToken(arc.resultStatusFilter).value());
         }
 
         Token outToken;
@@ -145,7 +170,16 @@ public:
 
         for (auto&& arc : m_outputArcs)
         {
-            arc.place->insertToken(outToken);
+            if (arc.contentBlockFilter.has_value())
+            {
+                Token filteredToken = outToken;
+                filteredToken.filterContentBlocks(arc.contentBlockFilter.value());
+                arc.place->insertToken(filteredToken);
+            }
+            else
+            {
+                arc.place->insertToken(outToken);
+            }
         }
     }
 

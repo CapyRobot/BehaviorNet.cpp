@@ -67,13 +67,15 @@ inline std::vector<std::string> split(const std::string& str, char delimiter)
 
 enum ActionExecutionStatus
 {
-    ACTION_EXEC_STATUS_COMPLETED_SUCCESS = 0,
-    ACTION_EXEC_STATUS_COMPLETED_FAILURE,
-    ACTION_EXEC_STATUS_COMPLETED_ERROR,
-    ACTION_EXEC_STATUS_COMPLETED_IN_PROGRESS, // add COMPLETED
-    ACTION_EXEC_STATUS_QUERRY_TIMEOUT,
-    ACTION_EXEC_STATUS_NOT_STARTED,
+    ACTION_EXEC_STATUS_COMPLETED_SUCCESS = 1 << 0, // associated action was successful, or tokens is in a passive place
+    ACTION_EXEC_STATUS_COMPLETED_FAILURE = 1 << 1, // associated action was unsuccessful
+    ACTION_EXEC_STATUS_COMPLETED_ERROR = 1 << 2,   // An error occurred when executing associated action
+    ACTION_EXEC_STATUS_COMPLETED_IN_PROGRESS = 1 << 3, // associated action is still in progress
+    ACTION_EXEC_STATUS_QUERRY_TIMEOUT =
+        1 << 4, // failure to get action status, i.e., action did not finish within the epoch
+    ACTION_EXEC_STATUS_NOT_STARTED = 1 << 5, // associated action is in the execution queue
 };
+typedef uint32_t ActionExecutionStatusBitmask;
 
 /**
  * TODO: implementation is just a quick prototype,  Factual implementation should be cleaned up and separated into

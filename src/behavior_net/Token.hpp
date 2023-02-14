@@ -20,6 +20,7 @@
 
 #include <3rd_party/nlohmann/json.hpp>
 #include <iostream>
+#include <regex>
 #include <unordered_map>
 
 #include "behavior_net/Common.hpp"
@@ -68,6 +69,19 @@ public:
                 throw RuntimeError("Token::mergeContentBlocks: token already has a block for key: " + block.first);
             }
         }
+    }
+
+    void filterContentBlocks(std::regex const& keyRegex)
+    {
+        decltype(m_contentBlocks) matchedBlocks;
+        for (auto it = m_contentBlocks.begin(); it != m_contentBlocks.end(); ++it)
+        {
+            if (std::regex_match(it->first, keyRegex))
+            {
+                matchedBlocks.insert(*it);
+            }
+        }
+        m_contentBlocks.swap(matchedBlocks);
     }
 
     auto getUniqueId() const { return m_uniqueId; }

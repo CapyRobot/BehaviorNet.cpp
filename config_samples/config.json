@@ -28,15 +28,15 @@
                 "transition_arcs": [
                     {
                         "place_id": "A",
-                        "arc_type": "input"
+                        "type": "input"
                     },
                     {
                         "place_id": "B",
-                        "arc_type": "output"
+                        "type": "output"
                     },
                     {
                         "place_id": "C",
-                        "arc_type": "output"
+                        "type": "output"
                     }
                 ]
             },
@@ -46,15 +46,17 @@
                 "transition_arcs": [
                     {
                         "place_id": "D",
-                        "arc_type": "output"
+                        "type": "output",
+                        "token_content_filter": "robot"
                     },
                     {
                         "place_id": "B",
-                        "arc_type": "input"
+                        "type": "input",
+                        "action_result_filter": ["SUCCESS"]
                     },
                     {
                         "place_id": "C",
-                        "arc_type": "input"
+                        "type": "input"
                     }
                 ]
             }
@@ -94,5 +96,50 @@
         }
     ],
     "execution_parameters": {},
-    "__gui_metadata": {}
+    "__gui_metadata": {
+        "places":{
+            "A": {
+                "position": [50, 0]
+            },
+            "B": {
+                "position": [0, 100]
+            },
+            "C": {
+                "position": [100, 100]
+            },
+            "D": {
+                "position": [50, 200]
+            }
+        },
+        "transitions":{
+            "T1":{
+                "position": [50, 50],
+                "arc_A_input":{
+                    "line_type": "diagonal_direct"
+                },
+                "arc_B_output":{
+                    "line_type": "elbowed",
+                    "axis_on_transition":"horizontal"
+                },
+                "arc_C_output":{
+                    "line_type": "elbowed",
+                    "axis_on_transition":"horizontal"
+                }
+            },
+            "T2":{
+                "position": [50, 150],
+                "arc_B_input":{
+                    "line_type": "elbowed",
+                    "axis_on_transition":"horizontal"
+                },
+                "arc_C_input":{
+                    "line_type": "elbowed",
+                    "axis_on_transition":"horizontal"
+                },
+                "arc_D_output":{
+                    "line_type": "diagonal_direct"
+                }
+            }
+        }
+    }
 }

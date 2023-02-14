@@ -24,6 +24,7 @@
 
 #include <3rd_party/nlohmann/json.hpp>
 #include <list>
+#include <optional>
 #include <unordered_map>
 
 namespace capybot
@@ -71,6 +72,7 @@ public:
         if (isPassive())
         {
             m_tokensAvailable.push_back(token);
+            m_tokensAvailableResult.push_back(ACTION_EXEC_STATUS_COMPLETED_SUCCESS);
         }
         else
         {
@@ -78,10 +80,29 @@ public:
         }
     }
 
-    Token consumeToken()
+    std::optional<Token> consumeToken(ActionExecutionStatusBitmask resultsAccepted = 0U)
     {
-        auto token = m_tokensAvailable.front();
-        m_tokensAvailable.pop_front();
+        std::optional<Token> token{};
+        if (resultsAccepted)
+        {
+            auto itRes = m_tokensAvailableResult.begin();
+            for (auto it = m_tokensAvailable.begin(); it != m_tokensAvailable.end(); it++, itRes++)
+            {
+                if (*itRes & resultsAccepted)
+                {
+                    token = *it;
+                    m_tokensAvailable.erase(it);
+                    m_tokensAvailableResult.erase(itRes);
+                    break;
+                }
+            }
+        }
+        else
+        {
+            token = m_tokensAvailable.front();
+            m_tokensAvailable.pop_front();
+            m_tokensAvailableResult.pop_front();
+        }
         return token;
     }
 
@@ -102,19 +123,12 @@ public:
             for (auto&& result : actionResults)
             {
                 std::list<Token>* dest;
-                if (result.status == ACTION_EXEC_STATUS_COMPLETED_SUCCESS)
+                if (result.status == ACTION_EXEC_STATUS_COMPLETED_SUCCESS ||
+                    result.status == ACTION_EXEC_STATUS_COMPLETED_FAILURE ||
+                    result.status == ACTION_EXEC_STATUS_COMPLETED_ERROR) // TODO: helper function
                 {
-                    dest = &m_tokensAvailable;
                 }
-                else if (result.status == ACTION_EXEC_STATUS_COMPLETED_FAILURE)
-                {
-                    dest = &m_tokensAvailable; // TODO
-                }
-                else if (result.status == ACTION_EXEC_STATUS_COMPLETED_ERROR)
-                {
-                    dest = &m_tokensAvailable; // TODO
-                }
-                else
+                else // action is not done yet
                 {
                     continue;
                 }
@@ -124,7 +138,8 @@ public:
                     if (result.tokenId == it->getUniqueId())
                     {
                         auto mv = it++;
-                        dest->splice(dest->end(), m_tokensBusy, mv);
+                        m_tokensAvailable.splice(m_tokensAvailable.end(), m_tokensBusy, mv);
+                        m_tokensAvailableResult.push_back(result.status);
                     }
                 }
             }
@@ -132,20 +147,34 @@ public:
     }
 
     bool isPassive() const { return m_action == nullptr; }
-    uint32_t getNumberTokensAvailable() const { return m_tokensAvailable.size(); }
+    std::string const& getId() const { return m_id; }
+
     uint32_t getNumberTokensBusy() const { return m_tokensBusy.size(); }
     uint32_t getNumberTokensTotal() const { return m_tokensBusy.size() + m_tokensAvailable.size(); }
-    std::list<Token> const& getTokensAvailable() const { return m_tokensAvailable; }
+    uint32_t getNumberTokensAvailable(ActionExecutionStatusBitmask status = 0U) const
+    {
+        if (status)
+        {
+            return std::count_if(m_tokensAvailableResult.begin(), m_tokensAvailableResult.end(),
+                                 [&status](ActionExecutionStatus s) { return s & status; });
+        }
+        return m_tokensAvailable.size();
+    }
+
     std::list<Token> const& getTokensBusy() const { return m_tokensBusy; }
-    std::string const& getId() const { return m_id; }
 
 private:
     std::string m_id;
     Action::UniquePtr m_action;
 
-    // TODO: sending references of tokens deep down the stack is problematic. One erroneous copy somewhere and ... :(
+    // TODO: sending references of tokens deep down the action stack is problematic.
+    // One erroneous copy somewhere and we end up with a reference to a temporary object
     std::list<Token> m_tokensAvailable; // ready to be consumed
-    std::list<Token> m_tokensBusy;      // either in action exec or waiting for exec
+    std::list<ActionExecutionStatus>
+        m_tokensAvailableResult; // stores the results associated with available tokens
+                                 // TODO: these two should belong to a single private struct
+
+    std::list<Token> m_tokensBusy; // either in action exec or waiting for exec
 };
 
 } // namespace bnet
