@@ -361,7 +361,7 @@ private:
             uint32_t durationMs = getConfigParam<uint32_t>(m_durationMs, token);
 
             float failureRate = getConfigParam<float>(m_failureRate, token);
-            float errorRate = getConfigParam<float>(errorRate, token);
+            float errorRate = getConfigParam<float>(m_errorRate, token);
             float successRate = 1.f - failureRate - errorRate;
 
             std::discrete_distribution<> d({successRate, failureRate, errorRate});

@@ -96,22 +96,6 @@ public:
             //     throw InvalidValueError("Transition::Transition: place with this id does not exist: " + placeId);
             // }
 
-            const auto typeStr = arcConfig.at("type").get<std::string>();
-            if (typeStr == "output")
-            {
-                arc.type = Arc::ARC_TYPE_TRANSITION_TO_PLACE;
-                m_outputArcs.push_back(arc);
-            }
-            else if (typeStr == "input")
-            {
-                arc.type = Arc::ARC_TYPE_PLACE_TO_TRANSITION;
-                m_inputArcs.push_back(arc);
-            }
-            else
-            {
-                throw InvalidValueError("Transition::Transition: unknown arc type: " + typeStr);
-            }
-
             if (arcConfig.contains("action_result_filter"))
             {
                 // TODO: assert is input
@@ -136,6 +120,22 @@ public:
             {
                 // TODO: assert is output
                 arc.contentBlockFilter = std::regex(arcConfig.at("token_content_filter").get<std::string>());
+            }
+
+            const auto typeStr = arcConfig.at("type").get<std::string>();
+            if (typeStr == "output")
+            {
+                arc.type = Arc::ARC_TYPE_TRANSITION_TO_PLACE; // TODO: needed anywhere?
+                m_outputArcs.push_back(arc);
+            }
+            else if (typeStr == "input")
+            {
+                arc.type = Arc::ARC_TYPE_PLACE_TO_TRANSITION;
+                m_inputArcs.push_back(arc);
+            }
+            else
+            {
+                throw InvalidValueError("Transition::Transition: unknown arc type: " + typeStr);
             }
         }
     }

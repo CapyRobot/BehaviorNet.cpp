@@ -43,14 +43,14 @@
                 "transition_arcs": [
                     {
                         "place_id": "task_execution",
-                        "type": "input"
-                    },
-                    {
-                        "place_id": "finished_tasks_success",
-                        "type": "output",
+                        "type": "input",
                         "action_result_filter": [
                             "SUCCESS"
                         ]
+                    },
+                    {
+                        "place_id": "finished_tasks_success",
+                        "type": "output"
                     }
                 ]
             },
@@ -59,14 +59,14 @@
                 "transition_arcs": [
                     {
                         "place_id": "task_execution",
-                        "type": "input"
-                    },
-                    {
-                        "place_id": "finished_tasks_failure",
-                        "type": "output",
+                        "type": "input",
                         "action_result_filter": [
                             "FAILURE"
                         ]
+                    },
+                    {
+                        "place_id": "finished_tasks_failure",
+                        "type": "output"
                     }
                 ]
             },
@@ -75,14 +75,14 @@
                 "transition_arcs": [
                     {
                         "place_id": "task_execution",
-                        "type": "input"
-                    },
-                    {
-                        "place_id": "finished_tasks_error",
-                        "type": "output",
+                        "type": "input",
                         "action_result_filter": [
                             "ERROR"
                         ]
+                    },
+                    {
+                        "place_id": "finished_tasks_error",
+                        "type": "output"
                     }
                 ]
             }
