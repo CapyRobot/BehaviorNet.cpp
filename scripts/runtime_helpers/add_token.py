@@ -47,6 +47,8 @@ parser.add_argument('-s', '--set_content', type=str, nargs='+', help='set conten
 args = parser.parse_args()
 
 url = args.bnet_addrs + "/add_token"
+if url[:7] != "http://":
+    url = "http://" + url
 print("Request url:", url, end="\n\n")
 
 if args.token_type in TOKEN_CONTENT_MAP.keys():
