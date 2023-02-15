@@ -65,6 +65,7 @@ public:
 
     Transition(nlohmann::json config, Place::IdMap const& places) : m_id(config.at("transition_id").get<std::string>())
     {
+        if (config.contains("transition_type"))
         {
             const auto typeStr = config.at("transition_type").get<std::string>();
             if (typeStr == "manual")
@@ -79,6 +80,10 @@ public:
             {
                 throw InvalidValueError("Transition::Transition: unknown transition type: " + typeStr);
             }
+        }
+        else // default TODO: warning
+        {
+            m_type = TRANSITION_TYPE_AUTO;
         }
 
         for (auto&& arcConfig : config.at("transition_arcs")) // TODO: to Arc constructor

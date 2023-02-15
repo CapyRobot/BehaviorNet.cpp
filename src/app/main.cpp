@@ -21,11 +21,12 @@ using namespace capybot;
 
 int main()
 {
-    auto config = bnet::NetConfig("config_samples/config.json");
+    auto config = bnet::NetConfig("config_samples/error_handling.json");
     auto net = bnet::PetriNet::create(config);
 
     bnet::Controller controller(config, std::move(net));
 
+    std::cout << "running ... " << std::endl;
     controller.run();
 
     return 0;
