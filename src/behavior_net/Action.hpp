@@ -316,7 +316,17 @@ private:
     template <typename T>
     static T getConfigParam(nlohmann::json const& configParam, Token const& token) // TODO: to container, + add range
     {
-        auto const str = configParam.get<std::string>();
+        std::string str;
+        try
+        {
+            str = configParam.get<std::string>();
+        }
+        catch (const nlohmann::json::exception& e)
+        {
+            // if we can't get as a string, it must be a direct value
+            return configParam.get<T>();
+        }
+
         if (str.find("@token") != std::string::npos)
         {
             const auto path = helpers::split(helpers::getContentBetweenChars(str, '{', '}'), '.');
@@ -342,7 +352,7 @@ private:
             , m_failureRate(config.contains("failure_rate") ? config.at("failure_rate") : nlohmann::json{0.f})
             , m_errorRate(config.contains("error_rate") ? config.at("error_rate") : nlohmann::json{0.f})
             , m_rd()
-            , m_gen(m_rd)
+            , m_gen(m_rd())
         {
         }
 
