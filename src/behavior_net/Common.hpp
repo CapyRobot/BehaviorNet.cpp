@@ -15,8 +15,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef BEHAVIOR_NET_CPP_COMMON_HPP_
-#define BEHAVIOR_NET_CPP_COMMON_HPP_
+#pragma once
 
 #include <exception>
 #include <mutex>
@@ -88,5 +87,3 @@ inline void timePoint(std::string const& msg)
 
 } // namespace bnet
 } // namespace capybot
-
-#endif // BEHAVIOR_NET_CPP_COMMON_HPP_

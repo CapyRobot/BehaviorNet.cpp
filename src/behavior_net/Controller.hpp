@@ -15,8 +15,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef BEHAVIOR_NET_CPP_CONTROLLER_HPP_
-#define BEHAVIOR_NET_CPP_CONTROLLER_HPP_
+#pragma once
 
 #include "behavior_net/Action.hpp"
 #include "behavior_net/PetriNet.hpp"
@@ -231,5 +230,3 @@ void HttpServer::setCallbacks(httplib::Server& server)
 
 } // namespace bnet
 } // namespace capybot
-
-#endif // BEHAVIOR_NET_CPP_CONTROLLER_HPP_

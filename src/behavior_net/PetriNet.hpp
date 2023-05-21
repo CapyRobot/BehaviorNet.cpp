@@ -15,8 +15,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef BEHAVIOR_NET_CPP_PETRI_NET_HPP_
-#define BEHAVIOR_NET_CPP_PETRI_NET_HPP_
+#pragma once
 
 #include "behavior_net/Config.hpp"
 #include "behavior_net/Place.hpp"
@@ -148,5 +147,3 @@ private:
 
 } // namespace bnet
 } // namespace capybot
-
-#endif // BEHAVIOR_NET_CPP_PETRI_NET_HPP_

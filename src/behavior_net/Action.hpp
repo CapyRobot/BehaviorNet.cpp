@@ -15,8 +15,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef BEHAVIOR_NET_CPP_ACTION_HPP_
-#define BEHAVIOR_NET_CPP_ACTION_HPP_ // TODO: use pragma once instead
+#pragma once
 
 #include "behavior_net/ThreadPool.hpp"
 #include "behavior_net/Token.hpp"
@@ -149,5 +148,3 @@ private:
 
 } // namespace bnet
 } // namespace capybot
-
-#endif // BEHAVIOR_NET_CPP_ACTION_HPP_

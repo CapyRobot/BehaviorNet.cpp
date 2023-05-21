@@ -15,8 +15,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef BEHAVIOR_NET_CPP_ACTION_REGISTRY_HPP_
-#define BEHAVIOR_NET_CPP_ACTION_REGISTRY_HPP_
+#pragma once
 
 #include "behavior_net/Action.hpp"
 #include <map>
@@ -73,5 +72,3 @@ private:
 
 } // namespace bnet
 } // namespace capybot
-
-#endif // BEHAVIOR_NET_CPP_ACTION_REGISTRY_HPP_

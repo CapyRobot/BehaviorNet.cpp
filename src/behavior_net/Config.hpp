@@ -15,8 +15,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef BEHAVIOR_NET_CPP_CONFIG_HPP_ // TODO: follow standard
-#define BEHAVIOR_NET_CPP_CONFIG_HPP_
+#pragma once
 
 #include <fstream>
 
@@ -44,5 +43,3 @@ private:
 
 } // namespace bnet
 } // namespace capybot
-
-#endif // BEHAVIOR_NET_CPP_CONFIG_HPP_

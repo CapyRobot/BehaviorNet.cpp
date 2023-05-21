@@ -15,8 +15,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef BEHAVIOR_NET_CPP_THREAD_POOL_HPP_
-#define BEHAVIOR_NET_CPP_THREAD_POOL_HPP_
+#pragma once
 
 #include "3rd_party/taskflow/taskflow.hpp"
 #include "behavior_net/Types.hpp"
@@ -109,5 +108,3 @@ private:
 
 } // namespace bnet
 } // namespace capybot
-
-#endif // BEHAVIOR_NET_CPP_THREAD_POOL_HPP_
