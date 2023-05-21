@@ -18,7 +18,7 @@
 #ifndef BEHAVIOR_NET_CPP_PLACE_HPP_
 #define BEHAVIOR_NET_CPP_PLACE_HPP_
 
-#include "behavior_net/Action.hpp"
+#include "behavior_net/ActionRegistry.hpp"
 #include "behavior_net/Common.hpp"
 #include "behavior_net/Token.hpp"
 
@@ -32,13 +32,13 @@ namespace capybot
 namespace bnet
 {
 
-class Place // add factory namespace
+class Place // TODO: add factory namespace
 {
 public:
     using SharedPtr = std::shared_ptr<Place>;
     using IdMap = std::map<std::string, SharedPtr>;
 
-    static IdMap createPlaces(nlohmann::json const& netConfig) // why shared_ptr?
+    static IdMap createPlaces(nlohmann::json const& netConfig) // TODO: why shared_ptr?
     {
         auto placeConfigs = netConfig.at("places");
         IdMap placePtrs;
@@ -54,25 +54,35 @@ public:
     {
         for (auto&& config : actionsConfig)
         {
-            places.at(config["place"])
-                ->setAssociatedAction(tp, Action::Factory::typeFromStr(config["type"]), config["params"]);
+            places
+                .at(config["place"]) // TODO: place -> place_id
+                ->setAssociatedAction(tp, config["type"], config["params"]);
         }
     }
 
-    Place(nlohmann::json config) : m_id(config.at("place_id").get<std::string>()) {}
-
-    void setAssociatedAction(ThreadPool& tp, Action::Factory::ActionType type, nlohmann::json const parameters)
+    Place(nlohmann::json config)
+        : m_id(config.at("place_id").get<std::string>())
+        , m_action(nullptr)
     {
-        m_action = Action::Factory::create(tp, type, parameters);
+    }
+
+    void setAssociatedAction(ThreadPool& tp, std::string const& type, nlohmann::json const& parameters)
+    {
+        if (m_action)
+        {
+            throw RuntimeError("Place::setAssociatedAction: trying to override existing action;"
+                               " likely a config file issue.");
+        }
+
+        m_action = ActionRegistry::create(tp, type, parameters);
     }
 
     void insertToken(Token token)
     {
-        token.setCurrentPlace(m_id);
         if (isPassive())
         {
             m_tokensAvailable.push_back(token);
-            m_tokensAvailableResult.push_back(ACTION_EXEC_STATUS_COMPLETED_SUCCESS);
+            m_tokensAvailableResult.push_back(ActionExecutionStatus::SUCCESS);
         }
         else
         {
@@ -80,15 +90,21 @@ public:
         }
     }
 
-    std::optional<Token> consumeToken(ActionExecutionStatusBitmask resultsAccepted = 0U)
+    Token consumeToken(ActionExecutionStatusSet resultsAccepted = 0U)
     {
-        std::optional<Token> token{};
-        if (resultsAccepted)
+        if (getNumberTokensAvailable(resultsAccepted) == 0U)
+        {
+            throw LogicError("Place::consumeToken: no tokens available for consumption. `getNumberTokensAvailable()` "
+                             "should have been called beforehand.");
+        }
+
+        Token token{};
+        if (resultsAccepted.any())
         {
             auto itRes = m_tokensAvailableResult.begin();
             for (auto it = m_tokensAvailable.begin(); it != m_tokensAvailable.end(); it++, itRes++)
             {
-                if (*itRes & resultsAccepted)
+                if (resultsAccepted.test(*itRes))
                 {
                     token = *it;
                     m_tokensAvailable.erase(it);
@@ -122,25 +138,27 @@ public:
 
             for (auto&& result : actionResults)
             {
-                std::list<Token>* dest;
-                if (result.status == ACTION_EXEC_STATUS_COMPLETED_SUCCESS ||
-                    result.status == ACTION_EXEC_STATUS_COMPLETED_FAILURE ||
-                    result.status == ACTION_EXEC_STATUS_COMPLETED_ERROR) // TODO: helper function
-                {
-                }
-                else // action is not done yet
+                if (result.status != +ActionExecutionStatus::SUCCESS &&
+                    result.status != +ActionExecutionStatus::FAILURE &&
+                    result.status != +ActionExecutionStatus::ERROR) // not completed
                 {
                     continue;
                 }
 
-                for (decltype(m_tokensBusy)::iterator it = m_tokensBusy.begin(); it != m_tokensBusy.end(); it++)
+                bool foundToken{false};
+                for (auto it = m_tokensBusy.begin(); it != m_tokensBusy.end(); it++)
                 {
                     if (result.tokenId == it->getUniqueId())
                     {
-                        auto mv = it++;
-                        m_tokensAvailable.splice(m_tokensAvailable.end(), m_tokensBusy, mv);
+                        m_tokensAvailable.splice(m_tokensAvailable.end(), m_tokensBusy, it);
                         m_tokensAvailableResult.push_back(result.status);
+                        foundToken = true;
+                        break;
                     }
+                }
+                if (!foundToken)
+                {
+                    throw LogicError("Place::checkActionResults: action result id does not match any busy tokens.");
                 }
             }
         }
@@ -151,12 +169,12 @@ public:
 
     uint32_t getNumberTokensBusy() const { return m_tokensBusy.size(); }
     uint32_t getNumberTokensTotal() const { return m_tokensBusy.size() + m_tokensAvailable.size(); }
-    uint32_t getNumberTokensAvailable(ActionExecutionStatusBitmask status = 0U) const
+    uint32_t getNumberTokensAvailable(ActionExecutionStatusSet status = 0U) const
     {
-        if (status)
+        if (status.any())
         {
             return std::count_if(m_tokensAvailableResult.begin(), m_tokensAvailableResult.end(),
-                                 [&status](ActionExecutionStatus s) { return s & status; });
+                                 [&status](ActionExecutionStatus s) { return status.test(s); });
         }
         return m_tokensAvailable.size();
     }

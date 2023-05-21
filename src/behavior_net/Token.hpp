@@ -35,7 +35,10 @@ class Token
 public:
     static constexpr uint64_t INVALID_TOKEN_ID{0UL};
 
-    Token() : m_uniqueId(generateUniqueId()) {}
+    Token()
+        : m_uniqueId(generateUniqueId())
+    {
+    }
     ~Token() = default;
     Token& operator=(const Token& other) { m_contentBlocks = other.m_contentBlocks; } // keep same unique id
 
@@ -61,14 +64,16 @@ public:
 
     void mergeContentBlocks(Token const& token)
     {
+        auto mergedBlocks = m_contentBlocks;
         for (auto block : token.m_contentBlocks)
         {
-            const auto [it, success] = m_contentBlocks.insert(block);
+            const auto [it, success] = mergedBlocks.insert(block);
             if (!success)
             {
                 throw RuntimeError("Token::mergeContentBlocks: token already has a block for key: " + block.first);
             }
         }
+        m_contentBlocks.swap(mergedBlocks);
     }
 
     void filterContentBlocks(std::regex const& keyRegex)
@@ -85,8 +90,6 @@ public:
     }
 
     auto getUniqueId() const { return m_uniqueId; }
-    auto getCurrentPlace() const { return m_currentPlaceId; }
-    void setCurrentPlace(std::string const& placeId) { m_currentPlaceId = placeId; }
 
 private:
     static uint64_t generateUniqueId()
@@ -99,7 +102,6 @@ private:
     }
 
     uint64_t m_uniqueId;
-    std::string m_currentPlaceId;
     std::unordered_map<std::string, nlohmann::json> m_contentBlocks;
 };
 

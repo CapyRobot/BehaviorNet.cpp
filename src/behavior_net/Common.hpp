@@ -31,11 +31,19 @@ namespace bnet
 class Exception : public std::exception
 {
 public:
-    explicit Exception(const char* message) : m_msg(message) {}
-    explicit Exception(std::string const& message) : m_msg(message) {}
+    explicit Exception(const char* message)
+        : m_msg(message)
+    {
+    }
+    explicit Exception(std::string const& message)
+        : m_msg(message)
+    {
+    }
     virtual ~Exception() noexcept {}
 
     virtual const char* what() const noexcept { return m_msg.c_str(); }
+
+    // TODO: add support for exception metadata
 
 protected:
     std::string m_msg;

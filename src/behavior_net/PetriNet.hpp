@@ -39,16 +39,17 @@ public:
         return std::make_unique<PetriNet>(config.get().at("petri_net"));
     }
 
-    PetriNet(nlohmann::json const& config) : m_config(config)
+    PetriNet(nlohmann::json const& config)
+        : m_config(config)
     {
         m_places = Place::createPlaces(config);
         m_transitions = Transition::createTransitions(config, m_places);
 
-        m_incidenceMatrixPlus.reset(m_transitions.size(), m_places.size(), 0U);
-        m_incidenceMatrixMinus.reset(m_transitions.size(), m_places.size(), 0U);
-        for (auto&& t : m_transitions)
-        {
-        }
+        // m_incidenceMatrixPlus.reset(m_transitions.size(), m_places.size(), 0U);
+        // m_incidenceMatrixMinus.reset(m_transitions.size(), m_places.size(), 0U);
+        // for (auto&& t : m_transitions)
+        // {
+        // }
     }
 
     void addToken(Token& newToken, std::string_view placeId)
@@ -59,7 +60,6 @@ public:
             if (id == placeId)
             {
                 placeExists = true;
-                newToken.setCurrentPlace(std::string(placeId));
                 placePtr->insertToken(newToken);
             }
         }
@@ -87,7 +87,7 @@ public:
             {
                 if (assertIsManual && !transition.isManual())
                 {
-                    throw LogicError("PetriNet::triggerTransition: trying to manually trigger auto transition: " +
+                    throw LogicError("PetriNet::triggerTransition: trying to manually trigger an auto transition: " +
                                      std::string(id));
                 }
 
@@ -109,7 +109,7 @@ public:
     nlohmann::json getMarking() const
     {
         nlohmann::json m;
-        m["config"] = m_config;
+        m["config"] = m_config; // TODO: ??
         m["marking"] = {};
         for (auto&& [id, placePtr] : m_places)
         {
@@ -124,25 +124,26 @@ private:
     Place::IdMap m_places; // why shared ptr?
     std::vector<Transition> m_transitions;
 
-    template <typename T>
-    struct Matrix
-    {
-        void reset(uint32_t rows, uint32_t cols, T initValue = {})
-        {
-            m_rows = rows;
-            m_cols = cols;
-            m_data = std::vector<T>(rows * cols, initValue);
-        }
+    // TODO: not needed so far
+    // template <typename T>
+    // struct Matrix
+    // {
+    //     void reset(uint32_t rows, uint32_t cols, T initValue = {})
+    //     {
+    //         m_rows = rows;
+    //         m_cols = cols;
+    //         m_data = std::vector<T>(rows * cols, initValue);
+    //     }
 
-        T at(uint32_t row, uint32_t col) const { return m_data.at(col + row * m_cols); }
-        T& at(uint32_t row, uint32_t col) { return m_data[col + row * m_cols]; }
+    //     T at(uint32_t row, uint32_t col) const { return m_data.at(col + row * m_cols); }
+    //     T& at(uint32_t row, uint32_t col) { return m_data[col + row * m_cols]; }
 
-    private:
-        uint32_t m_rows{0}, m_cols{0};
-        std::vector<T> m_data{};
-    };
-    Matrix<uint32_t> m_incidenceMatrixPlus;
-    Matrix<uint32_t> m_incidenceMatrixMinus;
+    // private:
+    //     uint32_t m_rows{0}, m_cols{0};
+    //     std::vector<T> m_data{};
+    // };
+    // Matrix<uint32_t> m_incidenceMatrixPlus;
+    // Matrix<uint32_t> m_incidenceMatrixMinus;
 };
 
 } // namespace bnet

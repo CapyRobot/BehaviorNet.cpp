@@ -97,23 +97,23 @@ class Agent:
     def execute(self, task_id):
         if not self.__task_is_done():
             print(f"[Agent::execute][ERROR] trying to start a new task when another task is still running.")
-            return "ACTION_EXEC_STATUS_COMPLETED_ERROR"
+            return "ERROR"
 
         self.task_in_exec = task_id
         self.task_start_time = time.time()
-        return "ACTION_EXEC_STATUS_COMPLETED_IN_PROGRESS"
+        return "IN_PROGRESS"
 
     def get_task_status(self, task_id) -> str:
         if self.task_in_exec != task_id:
             print(f"[Agent::get_status][ERROR] \"{task_id}\" is not running. " +
                   f"Instead, the current task is \"{self.task_in_exec}\".")
-            return "ACTION_EXEC_STATUS_COMPLETED_ERROR"
+            return "ERROR"
 
         if self.__task_is_done():
             self.task_in_exec = ""
-            return "ACTION_EXEC_STATUS_COMPLETED_SUCCESS"
+            return "SUCCESS"
         else:
-            return "ACTION_EXEC_STATUS_COMPLETED_IN_PROGRESS"
+            return "IN_PROGRESS"
 
     def __task_is_done(self):
         delta = time.time() - self.task_start_time

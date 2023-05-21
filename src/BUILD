@@ -2,10 +2,11 @@ load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 
 cc_library(
     name = "behavior_net_lib",
-    srcs = [
-        # "behavior_net/PetriNet.cpp"
-    ],
-    hdrs = glob(["**/*.hpp"]) + glob(["**/*.h"]) + glob(["**/*.cpp"]),
+    srcs = glob(["behavior_net/**/*.cpp"]),
+    # [
+    #     "behavior_net/PetriNet.cpp"
+    # ],
+    hdrs = glob(["**/*.hpp"]) + glob(["**/*.h"]),
     # [
     #     "behavior_net/PetriNet.hpp",
     #     "behavior_net/Common.hpp",

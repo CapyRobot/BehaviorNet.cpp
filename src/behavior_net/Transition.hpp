@@ -21,6 +21,7 @@
 #include "behavior_net/Common.hpp"
 #include "behavior_net/Place.hpp"
 #include "behavior_net/Token.hpp"
+#include "behavior_net/Types.hpp"
 
 #include <3rd_party/nlohmann/json.hpp>
 #include <regex>
@@ -54,18 +55,14 @@ public:
     struct Arc
     {
         Place::SharedPtr place;
-        enum ArcType
-        {
-            ARC_TYPE_PLACE_TO_TRANSITION = 0,
-            ARC_TYPE_TRANSITION_TO_PLACE
-        } type;
-        ActionExecutionStatusBitmask resultStatusFilter{0U};
+        ActionExecutionStatusSet resultStatusFilter{0U};
         std::optional<std::regex> contentBlockFilter; // TODO: to separate struct (+ helper methods)
     };
 
-    Transition(nlohmann::json config, Place::IdMap const& places) : m_id(config.at("transition_id").get<std::string>())
+    Transition(nlohmann::json config, Place::IdMap const& places)
+        : m_id(config.at("transition_id").get<std::string>())
     {
-        if (config.contains("transition_type"))
+        if (config.contains("transition_type")) // TODO: use BETTER_ENUM for type
         {
             const auto typeStr = config.at("transition_type").get<std::string>();
             if (typeStr == "manual")
@@ -99,16 +96,11 @@ public:
             if (arcConfig.contains("action_result_filter"))
             {
                 // TODO: assert is input
-                // TODO: this does not belong here? Maybe
-                static const std::map<std::string, ActionExecutionStatus> strStatusMap{
-                    {"SUCCESS", ACTION_EXEC_STATUS_COMPLETED_SUCCESS},
-                    {"FAILURE", ACTION_EXEC_STATUS_COMPLETED_FAILURE},
-                    {"ERROR", ACTION_EXEC_STATUS_COMPLETED_ERROR},
-                };
 
                 for (auto const& status : arcConfig.at("action_result_filter"))
                 {
-                    arc.resultStatusFilter |= strStatusMap.at(status.get<std::string>());
+                    arc.resultStatusFilter.set(
+                        ActionExecutionStatus::_from_string_nocase(status.get<std::string>().c_str()));
                 }
             }
             else
@@ -125,12 +117,10 @@ public:
             const auto typeStr = arcConfig.at("type").get<std::string>();
             if (typeStr == "output")
             {
-                arc.type = Arc::ARC_TYPE_TRANSITION_TO_PLACE; // TODO: needed anywhere?
                 m_outputArcs.push_back(arc);
             }
             else if (typeStr == "input")
             {
-                arc.type = Arc::ARC_TYPE_PLACE_TO_TRANSITION;
                 m_inputArcs.push_back(arc);
             }
             else
@@ -166,7 +156,7 @@ public:
         std::vector<Token> consumedTokens;
         for (auto&& arc : m_inputArcs)
         {
-            consumedTokens.push_back(arc.place->consumeToken(arc.resultStatusFilter).value());
+            consumedTokens.push_back(arc.place->consumeToken(arc.resultStatusFilter));
         }
 
         Token outToken;

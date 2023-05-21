@@ -30,6 +30,10 @@ namespace capybot
 namespace bnet
 {
 
+// TODO:
+//     - server should not depend on Controller, create a separate interface
+//     - create ServerI
+
 class Controller;
 
 class HttpServer
@@ -141,7 +145,7 @@ public:
 
     void runDetached()
     {
-        // TODO:assert joinable
+        // TODO: assert joinable
         m_runDetachedThread = std::thread([this] { run(); });
     }
 
