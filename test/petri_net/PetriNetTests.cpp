@@ -19,6 +19,7 @@
 
 #include "behavior_net/Config.hpp"
 #include "behavior_net/PetriNet.hpp"
+#include <behavior_net/Common.hpp>
 
 using namespace capybot::bnet;
 
@@ -63,5 +64,16 @@ TEST_CASE("We can manually trigger transitions.", "[PetriNet]")
     // trigging disable transition should throw
     {
         REQUIRE_THROWS_AS(net->triggerTransition("T1"), LogicError);
+    }
+}
+
+TEST_CASE("NeConfig validators work as expected.", "[PetriNet/NeConfig]")
+{
+    // good config
+    std::ignore = NetConfig("config_samples/config.json");
+
+    // Place
+    {
+        REQUIRE_THROWS_AS(NetConfig("test/petri_net/config/place_duplicated_ids.json"), ConfigFileError);
     }
 }

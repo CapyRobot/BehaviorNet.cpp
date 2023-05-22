@@ -1,0 +1,22 @@
+{
+    "config_metadata": {
+        "version": "0.1",
+        "id": "",
+        "authors": [
+            ""
+        ]
+    },
+    "petri_net": {
+        "places": [
+            {
+                "place_id": "A"
+            },
+            {
+                "place_id": "A"
+            }
+        ],
+        "transitions": []
+    },
+    "controller": {},
+    "initial_marking": []
+}

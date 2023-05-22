@@ -46,7 +46,6 @@ public:
             IdMap placePtrs;
             for (auto&& placeConfig : placeConfigs)
             {
-                // TODO: ensure no repeated ids
                 placePtrs.emplace(placeConfig.at("place_id").get<std::string>(), std::make_shared<Place>(placeConfig));
             }
             return placePtrs;

@@ -81,6 +81,12 @@ public:
     using Exception::Exception;
 };
 
+class ConfigFileError : public Exception
+{
+public:
+    using Exception::Exception;
+};
+
 namespace log
 {
 inline void timePoint(std::string const& msg)

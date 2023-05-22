@@ -4,6 +4,8 @@ cc_library(
     name = "behavior_net_lib",
     srcs = [
         "behavior_net/ActionRegistry.cpp",
+        "behavior_net/Config.cpp",
+        "behavior_net/Place.cpp",
         "behavior_net/action_impl/TimerAction.cpp",
         "behavior_net/action_impl/HttpGetAction.cpp",
     ],
