@@ -41,7 +41,7 @@ public:
     PetriNet(nlohmann::json const& config)
         : m_config(config)
     {
-        m_places = Place::createPlaces(config);
+        m_places = Place::Factory::createPlaces(config);
         m_transitions = Transition::createTransitions(config, m_places);
 
         // m_incidenceMatrixPlus.reset(m_transitions.size(), m_places.size(), 0U);

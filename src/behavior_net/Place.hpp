@@ -31,33 +31,37 @@ namespace capybot
 namespace bnet
 {
 
-class Place // TODO: add factory namespace
+class Place
 {
 public:
     using SharedPtr = std::shared_ptr<Place>;
-    using IdMap = std::map<std::string, SharedPtr>;
+    using IdMap = std::map<std::string, SharedPtr>; // TODO: why shared_ptr?
 
-    static IdMap createPlaces(nlohmann::json const& netConfig) // TODO: why shared_ptr?
+    class Factory
     {
-        auto placeConfigs = netConfig.at("places");
-        IdMap placePtrs;
-        for (auto&& placeConfig : placeConfigs)
+    public:
+        static IdMap createPlaces(nlohmann::json const& netConfig)
         {
-            // TODO: ensure no repeated ids
-            placePtrs.emplace(placeConfig.at("place_id").get<std::string>(), std::make_shared<Place>(placeConfig));
+            auto placeConfigs = netConfig.at("places");
+            IdMap placePtrs;
+            for (auto&& placeConfig : placeConfigs)
+            {
+                // TODO: ensure no repeated ids
+                placePtrs.emplace(placeConfig.at("place_id").get<std::string>(), std::make_shared<Place>(placeConfig));
+            }
+            return placePtrs;
         }
-        return placePtrs;
-    }
 
-    static void createActions(ThreadPool& tp, nlohmann::json const actionsConfig, IdMap& places)
-    {
-        for (auto&& config : actionsConfig)
+        static void createActions(ThreadPool& tp, nlohmann::json const actionsConfig, IdMap& places)
         {
-            places
-                .at(config["place"]) // TODO: place -> place_id
-                ->setAssociatedAction(tp, config["type"], config["params"]);
+            for (auto&& config : actionsConfig)
+            {
+                places
+                    .at(config["place"]) // TODO: place -> place_id
+                    ->setAssociatedAction(tp, config["type"], config["params"]);
+            }
         }
-    }
+    };
 
     Place(nlohmann::json config)
         : m_id(config.at("place_id").get<std::string>())

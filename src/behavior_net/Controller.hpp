@@ -116,7 +116,7 @@ public:
         , m_net(std::move(petriNet))
         , m_httpServer(config.get().at("controller").at("http_server"), this)
     {
-        Place::createActions(m_tp, config.get().at("controller").at("actions"), m_net->getPlaces());
+        Place::Factory::createActions(m_tp, config.get().at("controller").at("actions"), m_net->getPlaces());
     }
 
     ~Controller() { stop(); }

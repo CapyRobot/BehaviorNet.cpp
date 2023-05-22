@@ -42,19 +42,19 @@ TEST_CASE("We can initialize places from configuration", "[PetriNet/Place]")
     // single action per place
     {
         auto config = readJSONFile("test/petri_net/config/two_actions_one_place.json");
-        auto places = Place::createPlaces(config);
+        auto places = Place::Factory::createPlaces(config);
 
         ThreadPool tp;
-        REQUIRE_THROWS_AS(Place::createActions(tp, config["actions"], places), RuntimeError);
+        REQUIRE_THROWS_AS(Place::Factory::createActions(tp, config["actions"], places), RuntimeError);
     }
 }
 
 TEST_CASE("A place can have tokens, execute action on them, and get those consumed", "[PetriNet/Place]")
 {
     auto config = readJSONFile("test/petri_net/config/timer_place.json");
-    auto places = Place::createPlaces(config);
+    auto places = Place::Factory::createPlaces(config);
     ThreadPool tp;
-    Place::createActions(tp, config["actions"], places);
+    Place::Factory::createActions(tp, config["actions"], places);
 
     auto place = places.begin()->second;
     REQUIRE(place->getId() == "A");
