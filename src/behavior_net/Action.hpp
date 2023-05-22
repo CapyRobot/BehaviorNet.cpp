@@ -78,7 +78,7 @@ public:
 
         for (auto&& token : tokens)
         {
-            if (isInDelayedExecution(token)) // TODO: add unit test
+            if (isInDelayedExecution(token))
                 continue;
 
             m_epochExecutions.emplace_back(token, m_actionImpl->createCallable(token));
