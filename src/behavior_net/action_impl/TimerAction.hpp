@@ -50,7 +50,7 @@ public:
     {
     }
 
-    std::function<ActionExecutionStatus()> createCallable(Token const& token) override
+    std::function<ActionExecutionStatus()> createCallable(Token::ConstSharedPtr token) override
     {
         float failureRate = m_failureRate.get(token);
         float errorRate = m_errorRate.get(token);
@@ -59,20 +59,19 @@ public:
         std::discrete_distribution<> d({successRate, failureRate, errorRate});
         const auto result = ActionExecutionStatus::_from_integral(d(m_gen));
 
-        const auto tokenId = token.getUniqueId();
         const auto durationMs = m_durationMs.get(token);
 
-        return [this, tokenId, durationMs, result]() -> ActionExecutionStatus {
+        return [this, token, durationMs, result]() -> ActionExecutionStatus {
             const auto now = std::chrono::system_clock::now();
 
-            if (m_tokenIdToFinishTime.find(tokenId) == m_tokenIdToFinishTime.end()) // new timer
+            if (m_tokenIdToFinishTime.find(token.get()) == m_tokenIdToFinishTime.end()) // new timer
             {
-                m_tokenIdToFinishTime[tokenId] = now + std::chrono::milliseconds(durationMs);
+                m_tokenIdToFinishTime[token.get()] = now + std::chrono::milliseconds(durationMs);
             }
 
-            if (now > m_tokenIdToFinishTime[tokenId]) // timer is done
+            if (now > m_tokenIdToFinishTime[token.get()]) // timer is done
             {
-                m_tokenIdToFinishTime.erase(tokenId);
+                m_tokenIdToFinishTime.erase(token.get());
                 return result;
             }
 
@@ -85,7 +84,7 @@ private:
     const ConfigParameter<float> m_failureRate;
     const ConfigParameter<float> m_errorRate;
 
-    std::unordered_map<uint64_t, std::chrono::time_point<std::chrono::system_clock>> m_tokenIdToFinishTime;
+    std::unordered_map<const Token*, std::chrono::time_point<std::chrono::system_clock>> m_tokenIdToFinishTime;
 
     std::random_device m_rd;
     std::mt19937 m_gen;

@@ -18,9 +18,18 @@
 #pragma once
 
 #include <exception>
+#include <iostream>
 #include <mutex>
 #include <sstream>
 #include <string>
+
+#define THROW_ON_NULLPTR(var, moduleNameStr)                                                                           \
+    {                                                                                                                  \
+        if (var == nullptr)                                                                                            \
+        {                                                                                                              \
+            throw LogicError(std::string(moduleNameStr) + ": THROW_ON_NULLPTR - `" + #var + "`.");                     \
+        }                                                                                                              \
+    }
 
 namespace capybot
 {

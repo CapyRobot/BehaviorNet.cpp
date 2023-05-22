@@ -55,11 +55,5 @@ BETTER_ENUM(ActionExecutionStatus, uint32_t,
 
 using ActionExecutionStatusSet = std::bitset<max<ActionExecutionStatus>()._to_integral() + 1>;
 
-struct ActionExecutionResult
-{
-    uint64_t tokenId; // TODO: ptr or iterator
-    ActionExecutionStatus status;
-};
-
 } // namespace bnet
 } // namespace capybot

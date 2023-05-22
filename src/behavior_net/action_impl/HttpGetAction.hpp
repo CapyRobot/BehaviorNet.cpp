@@ -54,7 +54,7 @@ public:
     {
     }
 
-    std::function<ActionExecutionStatus()> createCallable(Token const& token) override
+    std::function<ActionExecutionStatus()> createCallable(Token::ConstSharedPtr token) override
     {
         return [&token, this]() -> ActionExecutionStatus {
             auto host = m_host.get(token);

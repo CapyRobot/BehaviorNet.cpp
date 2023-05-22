@@ -1,7 +1,7 @@
 
 cc_test(
     name = "petri_net_tests",
-    srcs = ["PetriNetTests.cpp"],
+    srcs = glob(["**/*.cpp"]),
     data = [
         "//config_samples:config_samples"
     ],

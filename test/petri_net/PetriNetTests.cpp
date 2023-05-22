@@ -20,31 +20,33 @@
 #include "behavior_net/Config.hpp"
 #include "behavior_net/PetriNet.hpp"
 
-using namespace capybot;
+using namespace capybot::bnet;
 
-std::unique_ptr<bnet::IPetriNet> createFromSampleConfig()
+std::unique_ptr<PetriNet> createFromSampleConfig()
 {
-    auto config = bnet::NetConfig(
+    auto config = NetConfig(
         "config_samples/config.json"); // TODO: create test specific config once we have a stable config format
-    return bnet::createPetriNet(config);
+    return PetriNet::create(config);
 }
 
 TEST_CASE("We can manually trigger transitions.", "[PetriNet]")
 {
     auto net = createFromSampleConfig();
 
-    bnet::Token token;
-    token.addContentBlock("type", nlohmann::json());
-    net->addToken(token, "A");
-    net->addToken(token, "A");
+    auto tokenA = Token::makeUnique();
+    auto tokenB = Token::makeUnique();
+    tokenA->addContentBlock("type", nlohmann::json());
+    tokenB->addContentBlock("type", nlohmann::json());
+    net->addToken(tokenA, "A");
+    net->addToken(tokenB, "A");
 
     // initial marking as expected
     {
         const auto m = net->getMarking();
-        REQUIRE(m.countAt("A") == 2);
-        REQUIRE(m.countAt("B") == 0);
-        REQUIRE(m.countAt("C") == 0);
-        REQUIRE(m.countAt("D") == 0);
+        REQUIRE(m["marking"]["A"] == 2);
+        REQUIRE(m["marking"]["B"] == 0);
+        REQUIRE(m["marking"]["C"] == 0);
+        REQUIRE(m["marking"]["D"] == 0);
     }
 
     // marking as expected after triggering transitions
@@ -52,58 +54,14 @@ TEST_CASE("We can manually trigger transitions.", "[PetriNet]")
         net->triggerTransition("T1");
         net->triggerTransition("T1");
         const auto m = net->getMarking();
-        REQUIRE(m.countAt("A") == 0);
-        REQUIRE(m.countAt("B") == 2);
-        REQUIRE(m.countAt("C") == 2);
-        REQUIRE(m.countAt("D") == 0);
+        REQUIRE(m["marking"]["A"] == 0);
+        REQUIRE(m["marking"]["B"] == 2);
+        REQUIRE(m["marking"]["C"] == 2);
+        REQUIRE(m["marking"]["D"] == 0);
     }
 
     // trigging disable transition should throw
     {
-        REQUIRE_THROWS_AS(net->triggerTransition("T1"), bnet::LogicError);
-    }
-}
-
-TEST_CASE("We can manage token content", "[PetriNet/Token]")
-{
-    // add and retrieve content
-    {
-        bnet::Token token;
-
-        nlohmann::json content1;
-        content1["k"] = "content1";
-        nlohmann::json content2;
-        content2["k"] = "content2";
-        token.addContentBlock("content1", content1);
-        token.addContentBlock("content2", content2);
-
-        REQUIRE(token.hasKey("content1"));
-        REQUIRE(token.hasKey("content2"));
-        REQUIRE_FALSE(token.hasKey("content3"));
-
-        content1 = token.getContent("content1");
-        content2 = token.getContent("content2");
-        REQUIRE_THROWS_AS(token.getContent("content3"), bnet::RuntimeError);
-
-        REQUIRE(content1["k"] == "content1");
-        REQUIRE(content2["k"] == "content2");
-    }
-
-    // we can merge content from another token
-    {
-        bnet::Token token1;
-        bnet::Token token2;
-        nlohmann::json content1;
-        nlohmann::json content2;
-        token1.addContentBlock("content1", content1);
-        token2.addContentBlock("content2", content2);
-
-        token1.mergeContentBlocks(token2);
-        content1 = token1.getContent("content1");
-        content2 = token1.getContent("content2");
-
-        // tokens cannot have conflicting keys
-        bnet::Token token3 = token2;
-        REQUIRE_THROWS_AS(token2.mergeContentBlocks(token3), bnet::RuntimeError);
+        REQUIRE_THROWS_AS(net->triggerTransition("T1"), LogicError);
     }
 }

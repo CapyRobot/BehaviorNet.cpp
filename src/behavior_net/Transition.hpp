@@ -33,9 +33,6 @@ namespace bnet
 class Transition
 {
 public:
-    using SharedPtr = std::shared_ptr<Token>;
-    using SharedPtrVec = std::vector<SharedPtr>;
-
     static std::vector<Transition> createTransitions(nlohmann::json const& netConfig, Place::IdMap const& places)
     {
         auto transitionConfigs = netConfig.at("transitions");
@@ -152,24 +149,25 @@ public:
             throw LogicError("Transition::trigger: trying to trigger disabled transition.");
         }
 
-        std::vector<Token> consumedTokens;
+        std::vector<Token::SharedPtr> consumedTokens;
         for (auto&& arc : m_inputArcs)
         {
             consumedTokens.push_back(arc.place->consumeToken(arc.resultStatusFilter));
         }
 
-        Token outToken;
+        auto outToken = Token::makeShared();
         for (auto&& t : consumedTokens)
         {
-            outToken.mergeContentBlocks(t);
+            outToken->mergeContentBlocks(t);
         }
 
         for (auto&& arc : m_outputArcs)
         {
             if (arc.contentBlockFilter.has_value())
             {
-                Token filteredToken = outToken;
-                filteredToken.filterContentBlocks(arc.contentBlockFilter.value());
+                auto filteredToken = Token::makeShared();
+                filteredToken->mergeContentBlocks(outToken);
+                filteredToken->filterContentBlocks(arc.contentBlockFilter.value());
                 arc.place->insertToken(filteredToken);
             }
             else

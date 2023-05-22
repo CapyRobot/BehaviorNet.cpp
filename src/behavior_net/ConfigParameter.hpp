@@ -66,7 +66,7 @@ public:
         }
     }
 
-    T get(Token const& token) const
+    T get(Token::ConstSharedPtr const& token) const
     {
         if (m_value.has_value())
         {
@@ -75,7 +75,7 @@ public:
         else
         {
             const auto contentBlockKey = m_path.at(0);
-            nlohmann::json data = token.getContent(contentBlockKey);
+            nlohmann::json data = token->getContent(contentBlockKey);
             for (auto it = m_path.begin() + 1; it != m_path.end(); ++it)
             {
                 data = data.at(*it);

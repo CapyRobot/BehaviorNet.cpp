@@ -76,7 +76,7 @@ public:
         m_action = ActionRegistry::create(tp, type, parameters);
     }
 
-    void insertToken(Token token)
+    void insertToken(Token::SharedPtr token)
     {
         if (isPassive())
         {
@@ -89,7 +89,7 @@ public:
         }
     }
 
-    Token consumeToken(ActionExecutionStatusSet resultsAccepted = 0U)
+    Token::SharedPtr consumeToken(ActionExecutionStatusSet resultsAccepted = 0U)
     {
         if (getNumberTokensAvailable(resultsAccepted) == 0U)
         {
@@ -97,7 +97,7 @@ public:
                              "should have been called beforehand.");
         }
 
-        Token token{};
+        Token::SharedPtr token{};
         if (resultsAccepted.any())
         {
             auto itRes = m_tokensAvailableResult.begin();
@@ -147,7 +147,7 @@ public:
                 bool foundToken{false};
                 for (auto it = m_tokensBusy.begin(); it != m_tokensBusy.end(); it++)
                 {
-                    if (result.tokenId == it->getUniqueId())
+                    if (result.tokenPtr == *it)
                     {
                         m_tokensAvailable.splice(m_tokensAvailable.end(), m_tokensBusy, it);
                         m_tokensAvailableResult.push_back(result.status);
@@ -178,20 +178,18 @@ public:
         return m_tokensAvailable.size();
     }
 
-    std::list<Token> const& getTokensBusy() const { return m_tokensBusy; }
+    std::list<Token::SharedPtr> const& getTokensBusy() const { return m_tokensBusy; }
 
 private:
     std::string m_id;
     Action::UniquePtr m_action;
 
-    // TODO: sending references of tokens deep down the action stack is problematic.
-    // One erroneous copy somewhere and we end up with a reference to a temporary object
-    std::list<Token> m_tokensAvailable; // ready to be consumed
+    std::list<Token::SharedPtr> m_tokensAvailable; // ready to be consumed
     std::list<ActionExecutionStatus>
         m_tokensAvailableResult; // stores the results associated with available tokens
                                  // TODO: these two should belong to a single private struct
 
-    std::list<Token> m_tokensBusy; // either in action exec or waiting for exec
+    std::list<Token::SharedPtr> m_tokensBusy; // either in action exec or waiting for exec
 };
 
 } // namespace bnet

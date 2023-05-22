@@ -19,6 +19,7 @@
 
 #include <3rd_party/nlohmann/json.hpp>
 #include <iostream>
+#include <memory>
 #include <regex>
 #include <unordered_map>
 
@@ -34,12 +35,15 @@ class Token
 public:
     static constexpr uint64_t INVALID_TOKEN_ID{0UL};
 
-    Token()
-        : m_uniqueId(generateUniqueId())
-    {
-    }
+    using UniquePtr = std::unique_ptr<Token>;
+    using SharedPtr = std::shared_ptr<Token>;
+    using ConstSharedPtr = std::shared_ptr<const Token>;
+
+    Token() = default;
     ~Token() = default;
-    Token& operator=(const Token& other) { m_contentBlocks = other.m_contentBlocks; } // keep same unique id
+
+    inline static SharedPtr makeShared() { return std::make_shared<Token>(); }
+    inline static UniquePtr makeUnique() { return std::make_unique<Token>(); }
 
     bool hasKey(std::string const& key) const { return m_contentBlocks.find(key) != m_contentBlocks.end(); }
 
@@ -61,10 +65,12 @@ public:
         }
     }
 
-    void mergeContentBlocks(Token const& token)
+    void mergeContentBlocks(Token::SharedPtr& token)
     {
+        THROW_ON_NULLPTR(token, "Token::mergeContentBlocks");
+
         auto mergedBlocks = m_contentBlocks;
-        for (auto block : token.m_contentBlocks)
+        for (auto block : token->m_contentBlocks)
         {
             const auto [it, success] = mergedBlocks.insert(block);
             if (!success)
@@ -88,19 +94,7 @@ public:
         m_contentBlocks.swap(matchedBlocks);
     }
 
-    auto getUniqueId() const { return m_uniqueId; }
-
 private:
-    static uint64_t generateUniqueId()
-    {
-        static uint64_t s_uniqueIdCounter{0UL};
-        ++s_uniqueIdCounter;
-        if (s_uniqueIdCounter == INVALID_TOKEN_ID)
-            ++s_uniqueIdCounter;
-        return s_uniqueIdCounter;
-    }
-
-    uint64_t m_uniqueId;
     std::unordered_map<std::string, nlohmann::json> m_contentBlocks;
 };
 

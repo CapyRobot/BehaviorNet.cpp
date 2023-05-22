@@ -32,23 +32,30 @@ struct ActionExecutionUnit
 {
     using List = std::list<ActionExecutionUnit>;
 
-    uint64_t tokenId;
+    Token::ConstSharedPtr tokenPtr;
     ThreadPool::Task task;
     uint32_t delayedEpochs;
 
-    ActionExecutionUnit(uint64_t id, std::function<ActionExecutionStatus()> func, uint32_t delay = 0)
-        : tokenId(id)
+    ActionExecutionUnit(Token::ConstSharedPtr const& token, std::function<ActionExecutionStatus()> func,
+                        uint32_t delay = 0)
+        : tokenPtr(token)
         , task(func)
         , delayedEpochs(delay)
     {
     }
 };
 
+struct ActionExecutionResult
+{
+    Token::ConstSharedPtr tokenPtr;
+    ActionExecutionStatus status;
+};
+
 /// @brief  Interface for all implementations
 class IActionImpl
 {
 public:
-    virtual std::function<ActionExecutionStatus()> createCallable(Token const& token) = 0;
+    virtual std::function<ActionExecutionStatus()> createCallable(Token::ConstSharedPtr token) = 0;
 };
 
 /// @brief Action object to be associated with a place
@@ -63,7 +70,7 @@ public:
     {
     }
 
-    void executeAsync(std::list<Token> const& tokens)
+    void executeAsync(std::list<Token::SharedPtr> const& tokens)
     {
         if (!m_epochExecutions.empty())
         {
@@ -72,15 +79,15 @@ public:
 
         for (auto&& token : tokens)
         {
-            if (isInDelayedExecution(token.getUniqueId())) // add unit test
+            if (isInDelayedExecution(token)) // TODO: add unit test
                 continue;
 
-            m_epochExecutions.emplace_back(token.getUniqueId(), m_actionImpl->createCallable(token));
+            m_epochExecutions.emplace_back(token, m_actionImpl->createCallable(token));
             m_threadPool.executeAsync(m_epochExecutions.back().task);
         }
     }
 
-    std::vector<ActionExecutionResult> getEpochResults() // TODO: add wait until logic
+    std::vector<ActionExecutionResult> getEpochResults()
     {
         std::vector<ActionExecutionResult> results;
         results.reserve(m_delayedExecutions.size() + m_epochExecutions.size());
@@ -94,7 +101,7 @@ public:
                 if (status._value != ActionExecutionStatus::NOT_STARTED &&
                     status._value != ActionExecutionStatus::QUERRY_TIMEOUT) // execution is done
                 {
-                    results.push_back(ActionExecutionResult{.tokenId = it->tokenId, .status = status});
+                    results.push_back(ActionExecutionResult{.tokenPtr = it->tokenPtr, .status = status});
                     m_delayedExecutions.erase(it++);
                 }
                 else
@@ -114,7 +121,7 @@ public:
                 if (status._value != ActionExecutionStatus::NOT_STARTED &&
                     status._value != ActionExecutionStatus::QUERRY_TIMEOUT) // execution is done
                 {
-                    results.push_back(ActionExecutionResult{.tokenId = unit.tokenId, .status = status});
+                    results.push_back(ActionExecutionResult{.tokenPtr = unit.tokenPtr, .status = status});
                     m_epochExecutions.pop_front();
                 }
                 else
@@ -132,10 +139,10 @@ public:
     uint32_t getNumberDelayedTasks() const { return m_delayedExecutions.size(); }
 
 private:
-    bool isInDelayedExecution(uint64_t tokenId) const
+    bool isInDelayedExecution(Token::ConstSharedPtr const& tokenPtr) const
     {
-        const auto checkId = [&tokenId](const ActionExecutionUnit& unit) { return unit.tokenId == tokenId; };
-        return std::find_if(m_delayedExecutions.begin(), m_delayedExecutions.end(), checkId) !=
+        const auto checkPtr = [&tokenPtr](const ActionExecutionUnit& unit) { return unit.tokenPtr == tokenPtr; };
+        return std::find_if(m_delayedExecutions.begin(), m_delayedExecutions.end(), checkPtr) !=
                m_delayedExecutions.end();
     }
 

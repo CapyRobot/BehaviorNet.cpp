@@ -23,6 +23,7 @@
 #include "3rd_party/cpp-httplib/httplib.h"
 
 #include <iostream>
+#include <memory>
 
 namespace capybot
 {
@@ -122,10 +123,10 @@ public:
 
     void addToken(nlohmann::json const& contentBlocks, std::string_view placeId)
     {
-        Token token;
+        auto token = Token::makeUnique();
         for (auto&& block : contentBlocks)
         {
-            token.addContentBlock(block.at("key"), block.at("content"));
+            token->addContentBlock(block.at("key"), block.at("content"));
         }
         m_net->addToken(token, placeId);
 

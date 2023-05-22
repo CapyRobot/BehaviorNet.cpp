@@ -51,15 +51,19 @@ public:
         // }
     }
 
-    void addToken(Token& newToken, std::string_view placeId)
+    /// @param newToken token to be added; will be moved so a token cannot be added more than once as tokens within the
+    /// net must be unique
+    void addToken(Token::UniquePtr& newToken, std::string_view placeId)
     {
+        THROW_ON_NULLPTR(newToken, "PetriNet::addToken");
+
         bool placeExists{false};
         for (auto&& [id, placePtr] : m_places)
         {
             if (id == placeId)
             {
                 placeExists = true;
-                placePtr->insertToken(newToken);
+                placePtr->insertToken(std::move(newToken));
             }
         }
         if (!placeExists)
