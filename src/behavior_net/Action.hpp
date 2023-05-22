@@ -32,12 +32,11 @@ struct ActionExecutionUnit
 {
     using List = std::list<ActionExecutionUnit>;
 
-    Token::ConstSharedPtr tokenPtr;
+    Token::SharedPtr tokenPtr;
     ThreadPool::Task task;
     uint32_t delayedEpochs;
 
-    ActionExecutionUnit(Token::ConstSharedPtr const& token, std::function<ActionExecutionStatus()> func,
-                        uint32_t delay = 0)
+    ActionExecutionUnit(Token::SharedPtr const& token, std::function<ActionExecutionStatus()> func, uint32_t delay = 0)
         : tokenPtr(token)
         , task(func)
         , delayedEpochs(delay)
@@ -47,7 +46,7 @@ struct ActionExecutionUnit
 
 struct ActionExecutionResult
 {
-    Token::ConstSharedPtr tokenPtr;
+    Token::SharedPtr tokenPtr;
     ActionExecutionStatus status;
 };
 

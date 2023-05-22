@@ -4,7 +4,7 @@ cc_test(
     srcs = glob(["**/*.cpp"]),
     data = [
         "//config_samples:config_samples"
-    ],
+    ] + glob(["**/*.json"]),
     defines = ["CATCH_CONFIG_MAIN"],
     deps = [
         "@catch2//:catch2_main",

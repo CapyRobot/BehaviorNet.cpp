@@ -1,0 +1,23 @@
+{
+    "places": [
+        {
+            "place_id": "A"
+        }
+    ],
+    "actions": [
+        {
+            "place": "A",
+            "type": "TimerAction",
+            "params": {
+                "duration_ms": 3000
+            }
+        },
+        {
+            "place": "A",
+            "type": "TimerAction",
+            "params": {
+                "duration_ms": 3000
+            }
+        }
+    ]
+}

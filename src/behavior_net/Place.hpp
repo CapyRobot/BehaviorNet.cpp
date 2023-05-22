@@ -80,8 +80,7 @@ public:
     {
         if (isPassive())
         {
-            m_tokensAvailable.push_back(token);
-            m_tokensAvailableResult.push_back(ActionExecutionStatus::SUCCESS);
+            m_tokensAvailable.push_back({token, ActionExecutionStatus::SUCCESS});
         }
         else
         {
@@ -100,23 +99,20 @@ public:
         Token::SharedPtr token{};
         if (resultsAccepted.any())
         {
-            auto itRes = m_tokensAvailableResult.begin();
-            for (auto it = m_tokensAvailable.begin(); it != m_tokensAvailable.end(); it++, itRes++)
+            for (auto it = m_tokensAvailable.begin(); it != m_tokensAvailable.end(); it++)
             {
-                if (resultsAccepted.test(*itRes))
+                if (resultsAccepted.test(it->status))
                 {
-                    token = *it;
+                    token = it->tokenPtr;
                     m_tokensAvailable.erase(it);
-                    m_tokensAvailableResult.erase(itRes);
                     break;
                 }
             }
         }
         else
         {
-            token = m_tokensAvailable.front();
+            token = m_tokensAvailable.front().tokenPtr;
             m_tokensAvailable.pop_front();
-            m_tokensAvailableResult.pop_front();
         }
         return token;
     }
@@ -144,18 +140,13 @@ public:
                     continue;
                 }
 
-                bool foundToken{false};
-                for (auto it = m_tokensBusy.begin(); it != m_tokensBusy.end(); it++)
+                auto it = std::find(m_tokensBusy.begin(), m_tokensBusy.end(), result.tokenPtr);
+                if (it != m_tokensBusy.end())
                 {
-                    if (result.tokenPtr == *it)
-                    {
-                        m_tokensAvailable.splice(m_tokensAvailable.end(), m_tokensBusy, it);
-                        m_tokensAvailableResult.push_back(result.status);
-                        foundToken = true;
-                        break;
-                    }
+                    m_tokensBusy.erase(it);
+                    m_tokensAvailable.push_back(result);
                 }
-                if (!foundToken)
+                else
                 {
                     throw LogicError("Place::checkActionResults: action result id does not match any busy tokens.");
                 }
@@ -172,8 +163,8 @@ public:
     {
         if (status.any())
         {
-            return std::count_if(m_tokensAvailableResult.begin(), m_tokensAvailableResult.end(),
-                                 [&status](ActionExecutionStatus s) { return status.test(s); });
+            return std::count_if(m_tokensAvailable.begin(), m_tokensAvailable.end(),
+                                 [&status](ActionExecutionResult const& s) { return status.test(s.status); });
         }
         return m_tokensAvailable.size();
     }
@@ -184,10 +175,7 @@ private:
     std::string m_id;
     Action::UniquePtr m_action;
 
-    std::list<Token::SharedPtr> m_tokensAvailable; // ready to be consumed
-    std::list<ActionExecutionStatus>
-        m_tokensAvailableResult; // stores the results associated with available tokens
-                                 // TODO: these two should belong to a single private struct
+    std::list<ActionExecutionResult> m_tokensAvailable; // ready to be consumed
 
     std::list<Token::SharedPtr> m_tokensBusy; // either in action exec or waiting for exec
 };

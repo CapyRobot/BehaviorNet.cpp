@@ -43,7 +43,6 @@ public:
 
     static Action::UniquePtr create(ThreadPool& tp, std::string const& actionType, nlohmann::json const& parameters)
     {
-
         if (s_registry.m_createFunctionMap.find(actionType) == s_registry.m_createFunctionMap.end())
         {
             throw LogicError("ActionRegistry::create: requested action type has not been registered: '" + actionType +

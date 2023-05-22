@@ -18,6 +18,7 @@
 #pragma once
 
 #include <optional>
+#include <sstream>
 #include <string>
 
 #include "3rd_party/nlohmann/json.hpp"
@@ -52,7 +53,7 @@ public:
         }
         catch (const nlohmann::json::exception& e)
         {
-            m_value = configParam.get<T>();
+            getDirectParameter(configParam);
             return;
         }
 
@@ -62,7 +63,7 @@ public:
         }
         else
         {
-            m_value = configParam.get<T>();
+            getDirectParameter(configParam);
         }
     }
 
@@ -74,17 +75,46 @@ public:
         }
         else
         {
-            const auto contentBlockKey = m_path.at(0);
-            nlohmann::json data = token->getContent(contentBlockKey);
-            for (auto it = m_path.begin() + 1; it != m_path.end(); ++it)
+            nlohmann::json data;
+            try
             {
-                data = data.at(*it);
+                const auto contentBlockKey = m_path.at(0);
+                data = token->getContent(contentBlockKey);
+                for (auto it = m_path.begin() + 1; it != m_path.end(); ++it)
+                {
+                    data = data.at(*it);
+                }
+                return data.get<T>();
             }
-            return data.get<T>();
+            catch (const nlohmann::json::exception& e)
+            {
+                std::stringstream ss;
+                ss << "ConfigParameter::get: failed to get tokenized parameter.\n\tdata: " << data << "\n\tpath: ";
+                for (auto&& p : m_path)
+                {
+                    ss << p << ", ";
+                }
+                std::cerr << ss.str() << std::endl;
+                throw;
+            }
         }
     }
 
 private:
+    inline void getDirectParameter(nlohmann::json const& configParam)
+    {
+        try
+        {
+            m_value = configParam.get<T>();
+        }
+        catch (const nlohmann::json::exception& e)
+        {
+            std::cerr << "ConfigParameter::getDirectParameter: failed to get parameter direct value - " << configParam
+                      << std::endl;
+            throw;
+        }
+    }
+
     std::optional<T> m_value;        // used if `configParam` is a direct value
     std::vector<std::string> m_path; // stores parameter path (e.g., "abc","def","ghi") if not a direct value
 

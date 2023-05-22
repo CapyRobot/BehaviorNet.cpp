@@ -22,7 +22,9 @@
 
 #include <behavior_net/ActionRegistry.hpp>
 #include <chrono>
+#include <mutex>
 #include <random>
+#include <string>
 #include <unordered_map>
 
 namespace capybot
@@ -43,8 +45,8 @@ class TimerAction : public IActionImpl
 public:
     TimerAction(nlohmann::json const config)
         : m_durationMs(config.at("duration_ms"))
-        , m_failureRate(config.contains("failure_rate") ? config.at("failure_rate") : nlohmann::json{0.f})
-        , m_errorRate(config.contains("error_rate") ? config.at("error_rate") : nlohmann::json{0.f})
+        , m_failureRate(config.contains("failure_rate") ? config.at("failure_rate") : nlohmann::json(0.f))
+        , m_errorRate(config.contains("error_rate") ? config.at("error_rate") : nlohmann::json(0.f))
         , m_rd()
         , m_gen(m_rd())
     {
@@ -63,6 +65,8 @@ public:
 
         return [this, token, durationMs, result]() -> ActionExecutionStatus {
             const auto now = std::chrono::system_clock::now();
+
+            std::unique_lock<std::mutex> lk(m_mtx);
 
             if (m_tokenIdToFinishTime.find(token.get()) == m_tokenIdToFinishTime.end()) // new timer
             {
@@ -85,12 +89,11 @@ private:
     const ConfigParameter<float> m_errorRate;
 
     std::unordered_map<const Token*, std::chrono::time_point<std::chrono::system_clock>> m_tokenIdToFinishTime;
+    std::mutex m_mtx;
 
     std::random_device m_rd;
     std::mt19937 m_gen;
 };
-
-REGISTER_ACTION_TYPE(TimerAction)
 
 } // namespace bnet
 } // namespace capybot

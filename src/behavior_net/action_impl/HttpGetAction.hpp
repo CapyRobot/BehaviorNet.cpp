@@ -137,7 +137,5 @@ private:
     std::list<std::string> m_inExec; // to keep track of actions in execution so we know which request type to send
 };
 
-REGISTER_ACTION_TYPE(HttpGetAction)
-
 } // namespace bnet
 } // namespace capybot
