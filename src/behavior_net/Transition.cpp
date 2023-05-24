@@ -131,6 +131,17 @@ bool validateTransitionsConfig(nlohmann::json const& netConfig, std::vector<std:
             }
         }
 
+        // has valid type
+        const auto typeStrOpt = getValueAtKey<std::string>(transitionConfig, "transition_type", errorMessages);
+        if (typeStrOpt.has_value())
+        {
+            const auto typeOpt = TransitionType::_from_string_nocase_nothrow(typeStrOpt.value().c_str());
+            if (!typeOpt)
+            {
+                errorMessages.push_back("Invalid transition type `" + typeStrOpt.value() + "`.");
+            }
+        }
+
         // arcs
         {
             const auto arcConfigsOpt =
