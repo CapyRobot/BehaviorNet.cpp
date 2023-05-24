@@ -31,6 +31,22 @@ namespace capybot
 {
 namespace bnet
 {
+
+class RegexFilter
+{
+public:
+    RegexFilter() = delete;
+    RegexFilter(std::string const& str)
+        : m_filter(str)
+    {
+    }
+
+    bool match(std::string const& str) const { return std::regex_match(str, m_filter); }
+
+private:
+    std::regex m_filter;
+};
+
 class Transition
 {
 public:
@@ -53,7 +69,7 @@ public:
     {
         Place::SharedPtr place;
         ActionExecutionStatusSet resultStatusFilter{0U};
-        std::optional<std::regex> contentBlockFilter; // TODO: to separate struct (+ helper methods)
+        std::optional<RegexFilter> contentBlockFilter;
     };
 
     Transition(nlohmann::json config, Place::IdMap const& places)
@@ -103,7 +119,7 @@ public:
             if (arcConfig.contains("token_content_filter"))
             {
                 // TODO: assert is output
-                arc.contentBlockFilter = std::regex(arcConfig.at("token_content_filter").get<std::string>());
+                arc.contentBlockFilter = RegexFilter(arcConfig.at("token_content_filter").get<std::string>());
             }
 
             const auto typeStr = arcConfig.at("type").get<std::string>();
@@ -163,7 +179,8 @@ public:
             {
                 auto filteredToken = Token::makeShared();
                 filteredToken->mergeContentBlocks(outToken);
-                filteredToken->filterContentBlocks(arc.contentBlockFilter.value());
+                filteredToken->filterContentBlocks(
+                    [&arc](std::string const& key) { return arc.contentBlockFilter.value().match(key); });
                 arc.place->insertToken(filteredToken);
             }
             else

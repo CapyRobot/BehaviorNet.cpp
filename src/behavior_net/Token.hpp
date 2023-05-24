@@ -20,7 +20,6 @@
 #include <3rd_party/nlohmann/json.hpp>
 #include <iostream>
 #include <memory>
-#include <regex>
 #include <unordered_map>
 
 #include "behavior_net/Common.hpp"
@@ -81,12 +80,12 @@ public:
         m_contentBlocks.swap(mergedBlocks);
     }
 
-    void filterContentBlocks(std::regex const& keyRegex)
+    void filterContentBlocks(std::function<bool(std::string const& key)> filter)
     {
         decltype(m_contentBlocks) matchedBlocks;
         for (auto it = m_contentBlocks.begin(); it != m_contentBlocks.end(); ++it)
         {
-            if (std::regex_match(it->first, keyRegex))
+            if (filter(it->first))
             {
                 matchedBlocks.insert(*it);
             }
