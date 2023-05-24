@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "behavior_net/Action.hpp"
-#include "behavior_net/PetriNet.hpp"
+#include <behavior_net/Action.hpp>
+#include <behavior_net/PetriNet.hpp>
 
-#include "3rd_party/cpp-httplib/httplib.h"
+#include <3rd_party/cpp-httplib/httplib.h>
 
 #include <iostream>
 #include <memory>

@@ -21,9 +21,9 @@
 #include <sstream>
 #include <string>
 
-#include "3rd_party/nlohmann/json.hpp"
+#include <3rd_party/nlohmann/json.hpp>
 
-#include "behavior_net/Token.hpp"
+#include <behavior_net/Token.hpp>
 
 namespace capybot
 {

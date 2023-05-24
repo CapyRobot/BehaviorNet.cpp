@@ -15,7 +15,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "behavior_net/ActionRegistry.hpp"
+#include <behavior_net/ActionRegistry.hpp>
 
 namespace capybot
 {

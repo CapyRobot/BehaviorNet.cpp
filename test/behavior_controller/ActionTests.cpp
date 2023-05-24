@@ -17,7 +17,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "behavior_net/Action.hpp"
+#include <behavior_net/Action.hpp>
 
 #include <chrono>
 #include <thread>

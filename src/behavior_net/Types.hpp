@@ -20,7 +20,7 @@
 #include <bitset>
 #include <cstdint>
 
-#include "3rd_party/better_enums/enums.h"
+#include <3rd_party/better_enums/enums.h>
 
 namespace capybot
 {

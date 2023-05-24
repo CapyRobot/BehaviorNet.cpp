@@ -17,8 +17,8 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "behavior_net/Config.hpp"
-#include "behavior_net/PetriNet.hpp"
+#include <behavior_net/Config.hpp>
+#include <behavior_net/PetriNet.hpp>
 #include <behavior_net/Common.hpp>
 
 #include "TestsCommon.hpp"

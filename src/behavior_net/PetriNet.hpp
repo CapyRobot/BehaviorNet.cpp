@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "behavior_net/Config.hpp"
-#include "behavior_net/Place.hpp"
-#include "behavior_net/Token.hpp"
-#include "behavior_net/Transition.hpp"
+#include <behavior_net/Config.hpp>
+#include <behavior_net/Place.hpp>
+#include <behavior_net/Token.hpp>
+#include <behavior_net/Transition.hpp>
 
 #include <memory>
 #include <string_view>

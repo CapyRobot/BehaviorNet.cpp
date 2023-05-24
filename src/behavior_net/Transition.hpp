@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "behavior_net/Common.hpp"
-#include "behavior_net/Place.hpp"
-#include "behavior_net/Token.hpp"
-#include "behavior_net/Types.hpp"
+#include <behavior_net/Common.hpp>
+#include <behavior_net/Place.hpp>
+#include <behavior_net/Token.hpp>
+#include <behavior_net/Types.hpp>
 
 #include <3rd_party/nlohmann/json.hpp>
 #include <regex>

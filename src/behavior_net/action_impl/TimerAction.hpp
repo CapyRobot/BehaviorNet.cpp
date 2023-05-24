@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "behavior_net/Action.hpp"
-#include "behavior_net/ConfigParameter.hpp"
+#include <behavior_net/Action.hpp>
+#include <behavior_net/ConfigParameter.hpp>
 
 #include <behavior_net/ActionRegistry.hpp>
 #include <chrono>

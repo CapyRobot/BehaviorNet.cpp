@@ -18,7 +18,7 @@
 #include <behavior_net/Common.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-#include "behavior_net/Token.hpp"
+#include <behavior_net/Token.hpp>
 
 #include "TestsCommon.hpp"
 

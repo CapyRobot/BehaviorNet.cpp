@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "behavior_net/ActionRegistry.hpp"
-#include "behavior_net/Common.hpp"
-#include "behavior_net/Token.hpp"
+#include <behavior_net/ActionRegistry.hpp>
+#include <behavior_net/Common.hpp>
+#include <behavior_net/Token.hpp>
 
 #include <3rd_party/nlohmann/json.hpp>
 #include <list>

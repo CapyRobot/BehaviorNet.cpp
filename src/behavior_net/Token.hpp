@@ -22,7 +22,7 @@
 #include <memory>
 #include <unordered_map>
 
-#include "behavior_net/Common.hpp"
+#include <behavior_net/Common.hpp>
 
 namespace capybot
 {
