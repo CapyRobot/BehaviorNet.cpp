@@ -21,6 +21,8 @@
 #include "behavior_net/PetriNet.hpp"
 #include <behavior_net/Common.hpp>
 
+#include "TestsCommon.hpp"
+
 using namespace capybot::bnet;
 
 std::unique_ptr<PetriNet> createFromSampleConfig()
@@ -63,7 +65,7 @@ TEST_CASE("We can manually trigger transitions.", "[PetriNet]")
 
     // trigging disable transition should throw
     {
-        REQUIRE_THROWS_AS(net->triggerTransition("T1"), LogicError);
+        REQUIRE_BNET_THROW_AS(net->triggerTransition("T1"), ExceptionType::LOGIC_ERROR);
     }
 }
 
@@ -74,14 +76,18 @@ TEST_CASE("NeConfig validators work as expected.", "[PetriNet/NeConfig]")
 
     // Place
     {
-        REQUIRE_THROWS_AS(NetConfig("test/petri_net/config/place_duplicated_ids.json"), ConfigFileError);
+        REQUIRE_BNET_THROW_AS(NetConfig("test/petri_net/config/place_duplicated_ids.json"),
+                              ExceptionType::INVALID_CONFIG_FILE);
     }
 
     // Transition
     {
         std::ignore = NetConfig("test/petri_net/config/transition_valid.json"); // valid config
-        REQUIRE_THROWS_AS(NetConfig("test/petri_net/config/transition_invalid_arc.json"), ConfigFileError);
-        REQUIRE_THROWS_AS(NetConfig("test/petri_net/config/transition_invalid_place.json"), ConfigFileError);
-        REQUIRE_THROWS_AS(NetConfig("test/petri_net/config/transition_duplicated_ids.json"), ConfigFileError);
+        REQUIRE_BNET_THROW_AS(NetConfig("test/petri_net/config/transition_invalid_arc.json"),
+                              ExceptionType::INVALID_CONFIG_FILE);
+        REQUIRE_BNET_THROW_AS(NetConfig("test/petri_net/config/transition_invalid_place.json"),
+                              ExceptionType::INVALID_CONFIG_FILE);
+        REQUIRE_BNET_THROW_AS(NetConfig("test/petri_net/config/transition_duplicated_ids.json"),
+                              ExceptionType::INVALID_CONFIG_FILE);
     }
 }

@@ -17,17 +17,24 @@
 
 #pragma once
 
+#include <3rd_party/better_enums/enums.h>
+#include <3rd_party/nlohmann/json.hpp>
+
 #include <exception>
 #include <iostream>
 #include <mutex>
+#include <optional>
 #include <sstream>
 #include <string>
+
+#include <behavior_net/Types.hpp>
 
 #define THROW_ON_NULLPTR(var, moduleNameStr)                                                                           \
     {                                                                                                                  \
         if (var == nullptr)                                                                                            \
         {                                                                                                              \
-            throw LogicError(std::string(moduleNameStr) + ": THROW_ON_NULLPTR - `" + #var + "`.");                     \
+            throw Exception(ExceptionType::RUNTIME_ERROR, std::string(moduleNameStr) + ": THROW_ON_NULLPTR.")          \
+                .appendMetadata("variable name", #var);                                                                \
         }                                                                                                              \
     }
 
@@ -36,55 +43,59 @@ namespace capybot
 namespace bnet
 {
 
-class Exception : public std::exception
+class Exception final : public std::exception
 {
 public:
-    explicit Exception(const char* message)
+    explicit Exception(ExceptionType type, const char* message)
         : m_msg(message)
+        , m_type(type)
     {
     }
-    explicit Exception(std::string const& message)
-        : m_msg(message)
+    explicit Exception(ExceptionType type, std::string const& message)
+        : Exception(type, message.c_str())
     {
     }
-    virtual ~Exception() noexcept {}
+    ~Exception() noexcept {}
 
-    virtual const char* what() const noexcept { return m_msg.c_str(); }
+    const char* what() const noexcept
+    {
+        computeFullErrorMessage();
+        return m_fullErrorMsg.c_str();
+    }
 
-    // TODO: add support for exception metadata
+    template <typename ValueT>
+    Exception& appendMetadata(std::string const& key, ValueT value)
+    {
+        if (!m_metadata.has_value())
+        {
+            m_metadata = nlohmann::json{};
+        }
+
+        m_metadata.value()[key] = value;
+
+        return *this;
+    }
+
+    ExceptionType const& type() const { return m_type; }
 
 protected:
+    void computeFullErrorMessage() const
+    {
+        std::stringstream ss;
+        ss << "[type = " << m_type._to_string() << "] " << m_msg << "\n";
+
+        if (m_metadata.has_value())
+        {
+            ss << "\nException metadata:\n" << m_metadata.value().dump(4) << "\n\n";
+        }
+        m_fullErrorMsg = ss.str();
+    }
+
     std::string m_msg;
-};
+    ExceptionType m_type;
+    std::optional<nlohmann::json> m_metadata;
 
-class RuntimeError : public Exception // TODO: error codes better?
-{
-public:
-    using Exception::Exception;
-};
-
-class LogicError : public Exception
-{
-public:
-    using Exception::Exception;
-};
-
-class InvalidValueError : public Exception
-{
-public:
-    using Exception::Exception;
-};
-
-class NotImplementedError : public Exception
-{
-public:
-    using Exception::Exception;
-};
-
-class ConfigFileError : public Exception
-{
-public:
-    using Exception::Exception;
+    mutable std::string m_fullErrorMsg;
 };
 
 namespace log

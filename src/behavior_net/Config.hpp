@@ -92,14 +92,10 @@ private:
 
         if (!errors.empty()) // failure
         {
-            std::stringstream ss;
-            ss << "NetConfig::validateConfig: Failed to validate configuration. " << errors.size()
-               << " errors found:\n";
-            for (auto&& error : errors)
-            {
-                ss << "\t" << error << "\n";
-            }
-            throw ConfigFileError(ss.str());
+            throw Exception(ExceptionType::INVALID_CONFIG_FILE,
+                            "NetConfig::validateConfig: Failed to validate configuration. ")
+                .appendMetadata("number of errors found", errors.size())
+                .appendMetadata("errors", errors);
         }
     }
 

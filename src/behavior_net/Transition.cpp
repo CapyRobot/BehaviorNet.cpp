@@ -16,9 +16,11 @@
  */
 
 #include <algorithm>
+#include <string>
+
 #include <behavior_net/Config.hpp>
 #include <behavior_net/Transition.hpp>
-#include <string>
+#include <behavior_net/Types.hpp>
 
 namespace capybot
 {
@@ -171,7 +173,9 @@ Transition::Transition(nlohmann::json config, Place::IdMap const& places)
     }
     if (m_type == +TransitionType::UNDEFINED)
     {
-        throw LogicError("Transition::Transition: uninitialized transition type.");
+        throw Exception(ExceptionType::INVALID_CONFIG_FILE, "Transition::Transition: uninitialized transition type.")
+            .appendMetadata("transition_id", m_id)
+            .appendMetadata("transition_type", config.at("transition_type").get<std::string>());
     }
 
     for (auto&& arcConfig : config.at("transition_arcs"))
@@ -209,8 +213,9 @@ Transition::Transition(nlohmann::json config, Place::IdMap const& places)
         }
         else
         {
-            throw InvalidValueError("Transition::Transition: invalid arc type: " +
-                                    arcConfig.at("type").get<std::string>());
+            throw Exception(ExceptionType::INVALID_CONFIG_FILE, "Transition::Transition: invalid arc type.")
+                .appendMetadata("transition_id", m_id)
+                .appendMetadata("arc type", arcConfig.at("type").get<std::string>());
         }
     }
 }
@@ -219,7 +224,9 @@ void Transition::trigger()
 {
     if (!isEnabled())
     {
-        throw LogicError("Transition::trigger: trying to trigger disabled transition. Use `isEnabled` first.");
+        throw Exception(ExceptionType::LOGIC_ERROR,
+                        "Transition::trigger: trying to trigger disabled transition. Use `isEnabled` first.")
+            .appendMetadata("transition_id", m_id);
     }
 
     std::vector<Token::SharedPtr> consumedTokens;

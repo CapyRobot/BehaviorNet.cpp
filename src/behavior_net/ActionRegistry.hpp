@@ -45,8 +45,9 @@ public:
     {
         if (s_registry.m_createFunctionMap.find(actionType) == s_registry.m_createFunctionMap.end())
         {
-            throw LogicError("ActionRegistry::create: requested action type has not been registered: '" + actionType +
-                             "'.");
+            throw Exception(ExceptionType::RUNTIME_ERROR,
+                            "ActionRegistry::create: requested action type has not been registered.")
+                .appendMetadata("requested actionType", actionType);
         }
 
         auto actionImpl = s_registry.m_createFunctionMap.at(actionType)(parameters);

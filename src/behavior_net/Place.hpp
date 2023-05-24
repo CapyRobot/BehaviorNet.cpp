@@ -55,9 +55,7 @@ public:
         {
             for (auto&& config : actionsConfig)
             {
-                places
-                    .at(config["place_id"])
-                    ->setAssociatedAction(tp, config["type"], config["params"]);
+                places.at(config["place_id"])->setAssociatedAction(tp, config["type"], config["params"]);
             }
         }
     };

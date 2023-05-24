@@ -67,5 +67,13 @@ BETTER_ENUM(ArcType, uint32_t, UNDEFINED = 0,
             OUTPUT // output to transition
 )
 
+BETTER_ENUM(ExceptionType, uint32_t, NONE = 0,
+            RUNTIME_ERROR,      //
+            LOGIC_ERROR,        //
+            INVALID_VALUE,      // bad parameter or bad argument
+            NOT_IMPLEMENTED,    //
+            INVALID_CONFIG_FILE // there is an issue with a config file, e.g., missing param, invalid param, ...
+)
+
 } // namespace bnet
 } // namespace capybot

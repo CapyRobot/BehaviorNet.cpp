@@ -50,7 +50,8 @@ public:
     {
         if (!hasKey(key))
         {
-            throw RuntimeError("Token::getContent: token does not contain a block for key: " + key);
+            throw Exception(ExceptionType::RUNTIME_ERROR, "Token::getContent: token does not contain a block for key.")
+                .appendMetadata("key", key);
         }
         return m_contentBlocks.at(key);
     }
@@ -60,7 +61,8 @@ public:
         const auto [it, success] = m_contentBlocks.insert({key, blockContent});
         if (!success)
         {
-            throw RuntimeError("Token::addContentBlock: token already has a block for key: " + key);
+            throw Exception(ExceptionType::RUNTIME_ERROR, "Token::addContentBlock: token already has a block for key.")
+                .appendMetadata("key", key);
         }
     }
 
@@ -74,7 +76,9 @@ public:
             const auto [it, success] = mergedBlocks.insert(block);
             if (!success)
             {
-                throw RuntimeError("Token::mergeContentBlocks: token already has a block for key: " + block.first);
+                throw Exception(ExceptionType::RUNTIME_ERROR,
+                                "Token::mergeContentBlocks: token already has a block for key.")
+                    .appendMetadata("key", block.first);
             }
         }
         m_contentBlocks.swap(mergedBlocks);

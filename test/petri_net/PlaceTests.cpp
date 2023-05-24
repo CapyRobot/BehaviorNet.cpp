@@ -15,6 +15,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <behavior_net/Types.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include <behavior_net/Common.hpp>
@@ -23,6 +24,8 @@
 #include <chrono>
 #include <string_view>
 #include <thread>
+
+#include "TestsCommon.hpp"
 
 using namespace capybot::bnet;
 
@@ -45,7 +48,8 @@ TEST_CASE("We can initialize places from configuration", "[PetriNet/Place]")
         auto places = Place::Factory::createPlaces(config);
 
         ThreadPool tp;
-        REQUIRE_THROWS_AS(Place::Factory::createActions(tp, config["actions"], places), RuntimeError);
+        REQUIRE_BNET_THROW_AS(Place::Factory::createActions(tp, config["actions"], places),
+                              ExceptionType::RUNTIME_ERROR);
     }
 }
 
@@ -71,7 +75,7 @@ TEST_CASE("A place can have tokens, execute action on them, and get those consum
     REQUIRE(place->getNumberTokensAvailable() == 0);
     REQUIRE(place->getNumberTokensTotal() == NUMBER_TOKENS);
 
-    REQUIRE_THROWS_AS(place->consumeToken(), LogicError); // no tokens to consume
+    REQUIRE_BNET_THROW_AS(place->consumeToken(), ExceptionType::LOGIC_ERROR); // no tokens to consume
 
     // running for two epochs because of the timer implementation
     constexpr auto epochDuration = std::chrono::milliseconds(50);
@@ -91,5 +95,5 @@ TEST_CASE("A place can have tokens, execute action on them, and get those consum
         place->consumeToken(); // we can consume tokens
     }
 
-    REQUIRE_THROWS_AS(place->consumeToken(), LogicError); // no tokens to consume
+    REQUIRE_BNET_THROW_AS(place->consumeToken(), ExceptionType::LOGIC_ERROR); // no tokens to consume
 }

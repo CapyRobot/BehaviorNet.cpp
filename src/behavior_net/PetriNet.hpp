@@ -68,7 +68,8 @@ public:
         }
         if (!placeExists)
         {
-            throw LogicError("PetriNet::addToken: place with this id does not exist: " + std::string(placeId));
+            throw Exception(ExceptionType::RUNTIME_ERROR, "PetriNet::addToken: place with this id does not exist.")
+                .appendMetadata("place_id", placeId);
         }
     }
 
@@ -90,8 +91,9 @@ public:
             {
                 if (assertIsManual && !transition.isManual())
                 {
-                    throw LogicError("PetriNet::triggerTransition: trying to manually trigger an auto transition: " +
-                                     std::string(id));
+                    throw Exception(ExceptionType::RUNTIME_ERROR,
+                                    "PetriNet::triggerTransition: trying to manually trigger an auto transition.")
+                        .appendMetadata("id", id);
                 }
 
                 exists = true;
@@ -100,7 +102,9 @@ public:
         }
         if (!exists)
         {
-            throw LogicError("PetriNet::triggerTransition: transition with this id does not exist: " + std::string(id));
+            throw Exception(ExceptionType::RUNTIME_ERROR,
+                            "PetriNet::triggerTransition: transition with this id does not exist.")
+                .appendMetadata("id", id);
         }
     }
 

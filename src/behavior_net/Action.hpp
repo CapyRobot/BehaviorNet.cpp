@@ -20,6 +20,7 @@
 #include "behavior_net/ThreadPool.hpp"
 #include "behavior_net/Token.hpp"
 #include "behavior_net/Types.hpp"
+#include <behavior_net/Common.hpp>
 
 #include <list>
 
@@ -73,7 +74,8 @@ public:
     {
         if (!m_epochExecutions.empty())
         {
-            throw LogicError("Action::executeAsync: `getEpochResults()` must be called for all 'executeAsync' calls.");
+            throw Exception(ExceptionType::LOGIC_ERROR,
+                            "Action::executeAsync: `getEpochResults()` must be called for all 'executeAsync' calls.");
         }
 
         for (auto&& token : tokens)

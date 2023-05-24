@@ -20,6 +20,8 @@
 
 #include "behavior_net/Token.hpp"
 
+#include "TestsCommon.hpp"
+
 using namespace capybot::bnet;
 
 TEST_CASE("We can manage token content", "[PetriNet/Token]")
@@ -41,7 +43,7 @@ TEST_CASE("We can manage token content", "[PetriNet/Token]")
 
         content1 = token->getContent("content1");
         content2 = token->getContent("content2");
-        REQUIRE_THROWS_AS(token->getContent("content3"), RuntimeError);
+        REQUIRE_BNET_THROW_AS(token->getContent("content3"), ExceptionType::RUNTIME_ERROR);
 
         REQUIRE(content1["k"] == "content1");
         REQUIRE(content2["k"] == "content2");
@@ -61,13 +63,13 @@ TEST_CASE("We can manage token content", "[PetriNet/Token]")
         content2 = token1->getContent("content2");
 
         // tokens cannot have conflicting keys
-        REQUIRE_THROWS_AS(token1->mergeContentBlocks(token2), RuntimeError);
+        REQUIRE_BNET_THROW_AS(token1->mergeContentBlocks(token2), ExceptionType::RUNTIME_ERROR);
     }
 
     // throw on nullptr param
     {
         auto token = Token::makeUnique();
         Token::SharedPtr tokenNull;
-        REQUIRE_THROWS_AS(token->mergeContentBlocks(tokenNull), LogicError);
+        REQUIRE_BNET_THROW_AS(token->mergeContentBlocks(tokenNull), ExceptionType::RUNTIME_ERROR);
     }
 }

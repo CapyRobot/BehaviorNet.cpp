@@ -61,8 +61,9 @@ void Place::setAssociatedAction(ThreadPool& tp, std::string const& type, nlohman
 {
     if (m_action)
     {
-        throw RuntimeError("Place::setAssociatedAction: trying to override existing action;"
-                           " likely a config file issue.");
+        throw Exception(ExceptionType::RUNTIME_ERROR,
+                        "Place::setAssociatedAction: trying to override existing action; likely a config file issue.")
+            .appendMetadata("place_id", getId());
     }
 
     m_action = ActionRegistry::create(tp, type, parameters);
@@ -84,8 +85,13 @@ Token::SharedPtr Place::consumeToken(ActionExecutionStatusSet resultsAccepted)
 {
     if (getNumberTokensAvailable(resultsAccepted) == 0U)
     {
-        throw LogicError("Place::consumeToken: no tokens available for consumption. `getNumberTokensAvailable()` "
-                         "should have been called beforehand.");
+        throw Exception(ExceptionType::LOGIC_ERROR,
+                        "Place::consumeToken: no tokens available for consumption. `getNumberTokensAvailable()` "
+                        "should have been called beforehand.")
+            .appendMetadata("place_id", getId())
+            .appendMetadata("available tokens", getNumberTokensAvailable())
+            .appendMetadata("busy tokens", getNumberTokensBusy())
+            .appendMetadata("total tokens", getNumberTokensTotal());
     }
 
     Token::SharedPtr token{};
@@ -139,7 +145,10 @@ void Place::checkActionResults()
             }
             else
             {
-                throw LogicError("Place::checkActionResults: action result id does not match any busy tokens.");
+                throw Exception(ExceptionType::LOGIC_ERROR,
+                                "Place::checkActionResults: action result token ptr does not match any busy tokens.")
+                    .appendMetadata("place_id", getId())
+                    .appendMetadata("busy tokens", getNumberTokensBusy());
             }
         }
     }
