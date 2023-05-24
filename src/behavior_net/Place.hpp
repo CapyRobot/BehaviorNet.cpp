@@ -35,7 +35,7 @@ class Place
 {
 public:
     using SharedPtr = std::shared_ptr<Place>;
-    using IdMap = std::map<std::string, SharedPtr>; // TODO: why shared_ptr?
+    using IdMap = std::map<std::string, SharedPtr>;
 
     class Factory
     {

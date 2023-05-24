@@ -124,7 +124,7 @@ public:
 private:
     nlohmann::json m_config;
 
-    Place::IdMap m_places; // why shared ptr?
+    Place::IdMap m_places;
     std::vector<Transition> m_transitions;
 
     // TODO: not needed so far
