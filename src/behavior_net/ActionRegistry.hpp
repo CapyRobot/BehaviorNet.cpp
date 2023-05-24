@@ -59,7 +59,7 @@ public:
     //     std::map<std::string, Action::UniquePtr> actionMap;
     //     for (auto&& config : actionsConfig)
     //     {
-    //         actionMap.emplace(config["place"], create(tp, config["type"], config["params"]));
+    //         actionMap.emplace(config["place_id"], create(tp, config["type"], config["params"]));
     //     }
     //     return actionMap;
     // }

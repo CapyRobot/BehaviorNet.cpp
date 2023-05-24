@@ -71,14 +71,14 @@
         },
         "actions": [
             {
-                "place": "B",
+                "place_id": "B",
                 "type": "ACTION_TYPE_SLEEP",
                 "params": {
                     "duration_ms": 3000
                 }
             },
             {
-                "place": "C",
+                "place_id": "C",
                 "type": "ACTION_TYPE_HTTP_GET",
                 "params": {
                     "host": "@token{robot.host}",

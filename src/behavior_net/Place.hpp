@@ -56,7 +56,7 @@ public:
             for (auto&& config : actionsConfig)
             {
                 places
-                    .at(config["place"]) // TODO: place -> place_id
+                    .at(config["place_id"])
                     ->setAssociatedAction(tp, config["type"], config["params"]);
             }
         }

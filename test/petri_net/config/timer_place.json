@@ -6,7 +6,7 @@
     ],
     "actions": [
         {
-            "place": "A",
+            "place_id": "A",
             "type": "TimerAction",
             "params": {
                 "duration_ms": 10

@@ -97,7 +97,7 @@
         },
         "actions": [
             {
-                "place": "task_execution",
+                "place_id": "task_execution",
                 "type": "ACTION_TYPE_SLEEP",
                 "params": {
                     "duration_ms": 3000,

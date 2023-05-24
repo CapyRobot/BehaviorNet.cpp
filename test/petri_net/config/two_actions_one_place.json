@@ -6,14 +6,14 @@
     ],
     "actions": [
         {
-            "place": "A",
+            "place_id": "A",
             "type": "TimerAction",
             "params": {
                 "duration_ms": 3000
             }
         },
         {
-            "place": "A",
+            "place_id": "A",
             "type": "TimerAction",
             "params": {
                 "duration_ms": 3000
