@@ -24,6 +24,7 @@
 
 #include <3rd_party/nlohmann/json.hpp>
 #include <regex>
+#include <string>
 #include <vector>
 
 namespace capybot
@@ -57,26 +58,21 @@ public:
 
     Transition(nlohmann::json config, Place::IdMap const& places)
         : m_id(config.at("transition_id").get<std::string>())
+        , m_type(TransitionType::UNDEFINED)
     {
-        if (config.contains("transition_type")) // TODO: use BETTER_ENUM for type
+        if (config.contains("transition_type"))
         {
-            const auto typeStr = config.at("transition_type").get<std::string>();
-            if (typeStr == "manual")
-            {
-                m_type = TRANSITION_TYPE_MANUAL;
-            }
-            else if (typeStr == "auto")
-            {
-                m_type = TRANSITION_TYPE_AUTO;
-            }
-            else
-            {
-                throw InvalidValueError("Transition::Transition: unknown transition type: " + typeStr);
-            }
+            m_type = TransitionType::_from_string_nocase(config.at("transition_type").get<std::string>().c_str());
         }
-        else // default TODO: warning
+        else
         {
-            m_type = TRANSITION_TYPE_AUTO;
+            std::cerr << "Transition::Transition: undefined transition type, using default AUTO. transition_id: "
+                      << m_id << std::endl;
+            m_type = TransitionType::AUTO;
+        }
+        if (m_type == +TransitionType::UNDEFINED)
+        {
+            throw LogicError("Transition::Transition: uninitialized transition type.");
         }
 
         for (auto&& arcConfig : config.at("transition_arcs")) // TODO: to Arc constructor
@@ -128,7 +124,7 @@ public:
 
     std::string const& getId() const { return m_id; }
 
-    bool isManual() const { return m_type == TRANSITION_TYPE_MANUAL; }
+    bool isManual() const { return m_type == +TransitionType::MANUAL; }
 
     bool isEnabled() const
     {
@@ -182,11 +178,7 @@ private:
     std::vector<Arc> m_outputArcs;
     std::string m_id;
 
-    enum TransitionType
-    {
-        TRANSITION_TYPE_MANUAL = 0,
-        TRANSITION_TYPE_AUTO
-    } m_type;
+    TransitionType m_type;
 };
 
 } // namespace bnet

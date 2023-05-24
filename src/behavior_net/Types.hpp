@@ -55,5 +55,11 @@ BETTER_ENUM(ActionExecutionStatus, uint32_t,
 
 using ActionExecutionStatusSet = std::bitset<max<ActionExecutionStatus>()._to_integral() + 1>;
 
+/// Transition type - using BETTER_ENUM for helper str member functions
+BETTER_ENUM(TransitionType, uint32_t, UNDEFINED = 0,
+            AUTO,  // can only be triggered by the controller
+            MANUAL // can only be triggered by user
+)
+
 } // namespace bnet
 } // namespace capybot
