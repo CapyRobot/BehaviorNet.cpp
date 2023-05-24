@@ -60,8 +60,6 @@ public:
             transitions.emplace_back(transitionConfig, places);
         }
 
-        // TODO: ensure no repeated ids
-
         return transitions;
     }
 
@@ -76,14 +74,19 @@ public:
         : m_id(config.at("transition_id").get<std::string>())
         , m_type(TransitionType::UNDEFINED)
     {
+        /**
+         * From here on, the config is assumed to be valid. See `validateTransitionsConfig`
+         */
+
         if (config.contains("transition_type"))
         {
             m_type = TransitionType::_from_string_nocase(config.at("transition_type").get<std::string>().c_str());
         }
         else
         {
-            std::cerr << "Transition::Transition: undefined transition type, using default AUTO. transition_id: "
-                      << m_id << std::endl;
+            std::cerr
+                << "[WARN] Transition::Transition: undefined transition type, using default `AUTO`. transition_id: "
+                << m_id << std::endl;
             m_type = TransitionType::AUTO;
         }
         if (m_type == +TransitionType::UNDEFINED)
@@ -91,20 +94,14 @@ public:
             throw LogicError("Transition::Transition: uninitialized transition type.");
         }
 
-        for (auto&& arcConfig : config.at("transition_arcs")) // TODO: to Arc constructor
+        for (auto&& arcConfig : config.at("transition_arcs"))
         {
             Arc arc;
             const auto placeId = arcConfig.at("place_id").get<std::string>();
             arc.place = places.at(placeId);
-            // if (arc.place == nullptr) // TODO place id does not exist within created places
-            // {
-            //     throw InvalidValueError("Transition::Transition: place with this id does not exist: " + placeId);
-            // }
 
             if (arcConfig.contains("action_result_filter"))
             {
-                // TODO: assert is input
-
                 for (auto const& status : arcConfig.at("action_result_filter"))
                 {
                     arc.resultStatusFilter.set(
@@ -118,22 +115,22 @@ public:
 
             if (arcConfig.contains("token_content_filter"))
             {
-                // TODO: assert is output
                 arc.contentBlockFilter = RegexFilter(arcConfig.at("token_content_filter").get<std::string>());
             }
 
-            const auto typeStr = arcConfig.at("type").get<std::string>();
-            if (typeStr == "output")
+            const auto type = ArcType::_from_string_nocase(arcConfig.at("type").get<std::string>().c_str());
+            if (type == +ArcType::OUTPUT)
             {
                 m_outputArcs.push_back(arc);
             }
-            else if (typeStr == "input")
+            else if (type == +ArcType::INPUT)
             {
                 m_inputArcs.push_back(arc);
             }
             else
             {
-                throw InvalidValueError("Transition::Transition: unknown arc type: " + typeStr);
+                throw InvalidValueError("Transition::Transition: invalid arc type: " +
+                                        arcConfig.at("type").get<std::string>());
             }
         }
     }

@@ -27,25 +27,28 @@ bool validatePlacesConfig(nlohmann::json const& netConfig, std::vector<std::stri
 {
     errorMessages.clear();
 
-    if (!netConfig.contains("petri_net") || !netConfig.at("petri_net").contains("places"))
+    const auto placeConfigsOpt =
+        getValueAtPath<nlohmann::json const>(netConfig, {"petri_net", "places"}, errorMessages);
+    if (!placeConfigsOpt.has_value())
     {
-        errorMessages.push_back("Net config does not contain `petri_net.places`.");
         return false;
     }
-    auto placeConfigs = netConfig.at("petri_net").at("places");
 
     // no repeated ids
     std::vector<std::string> ids{};
-    for (auto&& placeConfig : placeConfigs)
+    for (auto&& placeConfig : placeConfigsOpt.value())
     {
-        const auto id = placeConfig.at("place_id").get<std::string>();
-        if (std::find(ids.begin(), ids.end(), id) != ids.end())
+        const auto id = getValueAtKey<std::string>(placeConfig, "place_id", errorMessages);
+        if (id.has_value())
         {
-            errorMessages.push_back("Repeated `place_id`: " + id);
-        }
-        else
-        {
-            ids.push_back(id);
+            if (std::find(ids.begin(), ids.end(), id.value()) != ids.end())
+            {
+                errorMessages.push_back("Repeated `place_id`: " + id.value());
+            }
+            else
+            {
+                ids.push_back(id.value());
+            }
         }
     }
 

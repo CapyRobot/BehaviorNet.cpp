@@ -76,4 +76,12 @@ TEST_CASE("NeConfig validators work as expected.", "[PetriNet/NeConfig]")
     {
         REQUIRE_THROWS_AS(NetConfig("test/petri_net/config/place_duplicated_ids.json"), ConfigFileError);
     }
+
+    // Transition
+    {
+        std::ignore = NetConfig("test/petri_net/config/transition_valid.json"); // valid config
+        REQUIRE_THROWS_AS(NetConfig("test/petri_net/config/transition_invalid_arc.json"), ConfigFileError);
+        REQUIRE_THROWS_AS(NetConfig("test/petri_net/config/transition_invalid_place.json"), ConfigFileError);
+        REQUIRE_THROWS_AS(NetConfig("test/petri_net/config/transition_duplicated_ids.json"), ConfigFileError);
+    }
 }

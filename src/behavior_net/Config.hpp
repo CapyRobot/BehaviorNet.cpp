@@ -24,6 +24,7 @@
 #include <fstream>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <sstream>
 
 #define REGISTER_NET_CONFIG_VALIDATOR(validatorFunc, validatorId)                                                      \
@@ -73,12 +74,19 @@ private:
         for (auto&& validator : s_validators)
         {
             std::vector<std::string> errorMsgs{""};
-            if (!validator.func(m_config, errorMsgs))
+            try
             {
-                for (auto&& err : errorMsgs)
+                if (!validator.func(m_config, errorMsgs))
                 {
-                    errors.push_back("[" + validator.id + "] " + err);
+                    for (auto&& err : errorMsgs)
+                    {
+                        errors.push_back("[" + validator.id + "] " + err);
+                    }
                 }
+            }
+            catch (const nlohmann::json::exception& e)
+            {
+                errors.push_back("[" + validator.id + "] failed with nlohmann::json::exception: " + e.what());
             }
         }
 
@@ -102,6 +110,76 @@ private:
     };
     static std::vector<Validator> s_validators;
 };
+
+template <typename T>
+inline std::optional<T> getValue(nlohmann::json const& config, std::vector<std::string>& errorMessages)
+{
+    try
+    {
+        return config.get<T>();
+    }
+    catch (const nlohmann::json::exception& e)
+    {
+        errorMessages.push_back("Failed to retrieve in expected type. error = " + std::string(e.what()));
+    }
+    return std::nullopt;
+}
+
+template <typename T>
+inline std::optional<T> getValueAtKey(nlohmann::json const& config, std::string const& key,
+                                      std::vector<std::string>& errorMessages)
+{
+    if (!config.contains(key))
+    {
+        errorMessages.push_back("Expected key `" + key + "` does not exist in config.");
+        return std::nullopt;
+    }
+
+    try
+    {
+        return config.at(key).get<T>();
+    }
+    catch (const nlohmann::json::exception& e)
+    {
+        errorMessages.push_back("Failed to retrieve `" + key + "` in expected type. error = " + e.what());
+    }
+    return std::nullopt;
+}
+
+inline std::string concat(std::vector<std::string> const& strs, std::string const& delimitator = "")
+{
+    return std::accumulate(
+        std::begin(strs), std::end(strs), std::string(),
+        [&delimitator](std::string const& ss, std::string const& s) { return ss + delimitator + s; });
+}
+
+template <typename T>
+inline std::optional<T> getValueAtPath(nlohmann::json const& config, std::vector<std::string> const& keyPath,
+                                       std::vector<std::string>& errorMessages)
+{
+    auto c = config;
+    for (auto&& k : keyPath)
+    {
+        if (!c.contains(k))
+        {
+            errorMessages.push_back("Expected key `" + k + "` does not exist in config path `" + concat(keyPath, "/") +
+                                    "`");
+            return std::nullopt;
+        }
+        c = c.at(k);
+    }
+
+    try
+    {
+        return c.get<T>();
+    }
+    catch (const nlohmann::json::exception& e)
+    {
+        errorMessages.push_back("Failed to retrieve path `" + concat(keyPath, "/") +
+                                "` in expected type. error = " + e.what());
+    }
+    return std::nullopt;
+}
 
 } // namespace bnet
 } // namespace capybot

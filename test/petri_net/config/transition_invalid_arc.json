@@ -1,0 +1,52 @@
+{
+    "config_metadata": {
+        "version": "0.1",
+        "id": "",
+        "authors": [
+            ""
+        ]
+    },
+    "petri_net": {
+        "places": [
+            {
+                "place_id": "A"
+            },
+            {
+                "place_id": "B"
+            }
+        ],
+        "transitions": [
+            {
+                "transition_id": "T1",
+                "transition_type": "auto",
+                "transition_arcs": [
+                    {
+                        "place_id": "A",
+                        "type": "input"
+                    },
+                    {
+                        "place_id": "B",
+                        "type": "output"
+                    }
+                ]
+            },
+            {
+                "transition_id": "T2",
+                "transition_type": "manual",
+                "transition_arcs": [
+                    {
+                        "place_id": "A",
+                        "type": "input",
+                        "token_content_filter": "robot"
+                    },
+                    {
+                        "type": "output",
+                        "action_result_filter": "INPUT"
+                    }
+                ]
+            }
+        ]
+    },
+    "controller": {},
+    "initial_marking": []
+}

@@ -61,5 +61,11 @@ BETTER_ENUM(TransitionType, uint32_t, UNDEFINED = 0,
             MANUAL // can only be triggered by user
 )
 
+/// Arc type (from transition perspective) - using BETTER_ENUM for helper str member functions
+BETTER_ENUM(ArcType, uint32_t, UNDEFINED = 0,
+            INPUT, // input to transition
+            OUTPUT // output to transition
+)
+
 } // namespace bnet
 } // namespace capybot
