@@ -68,94 +68,11 @@ public:
     {
     }
 
-    void setAssociatedAction(ThreadPool& tp, std::string const& type, nlohmann::json const& parameters)
-    {
-        if (m_action)
-        {
-            throw RuntimeError("Place::setAssociatedAction: trying to override existing action;"
-                               " likely a config file issue.");
-        }
-
-        m_action = ActionRegistry::create(tp, type, parameters);
-    }
-
-    void insertToken(Token::SharedPtr token)
-    {
-        if (isPassive())
-        {
-            m_tokensAvailable.push_back({token, ActionExecutionStatus::SUCCESS});
-        }
-        else
-        {
-            m_tokensBusy.push_back(token);
-        }
-    }
-
-    Token::SharedPtr consumeToken(ActionExecutionStatusSet resultsAccepted = 0U)
-    {
-        if (getNumberTokensAvailable(resultsAccepted) == 0U)
-        {
-            throw LogicError("Place::consumeToken: no tokens available for consumption. `getNumberTokensAvailable()` "
-                             "should have been called beforehand.");
-        }
-
-        Token::SharedPtr token{};
-        if (resultsAccepted.any())
-        {
-            for (auto it = m_tokensAvailable.begin(); it != m_tokensAvailable.end(); it++)
-            {
-                if (resultsAccepted.test(it->status))
-                {
-                    token = it->tokenPtr;
-                    m_tokensAvailable.erase(it);
-                    break;
-                }
-            }
-        }
-        else
-        {
-            token = m_tokensAvailable.front().tokenPtr;
-            m_tokensAvailable.pop_front();
-        }
-        return token;
-    }
-
-    void executeActionAsync()
-    {
-        if (!isPassive())
-        {
-            m_action->executeAsync(getTokensBusy());
-        }
-    }
-
-    void checkActionResults()
-    {
-        if (!isPassive())
-        {
-            const auto actionResults = m_action->getEpochResults();
-
-            for (auto&& result : actionResults)
-            {
-                if (result.status != +ActionExecutionStatus::SUCCESS &&
-                    result.status != +ActionExecutionStatus::FAILURE &&
-                    result.status != +ActionExecutionStatus::ERROR) // not completed
-                {
-                    continue;
-                }
-
-                auto it = std::find(m_tokensBusy.begin(), m_tokensBusy.end(), result.tokenPtr);
-                if (it != m_tokensBusy.end())
-                {
-                    m_tokensBusy.erase(it);
-                    m_tokensAvailable.push_back(result);
-                }
-                else
-                {
-                    throw LogicError("Place::checkActionResults: action result id does not match any busy tokens.");
-                }
-            }
-        }
-    }
+    void setAssociatedAction(ThreadPool& tp, std::string const& type, nlohmann::json const& parameters);
+    void insertToken(Token::SharedPtr token);
+    Token::SharedPtr consumeToken(ActionExecutionStatusSet resultsAccepted = 0U);
+    void executeActionAsync();
+    void checkActionResults();
 
     bool isPassive() const { return m_action == nullptr; }
     std::string const& getId() const { return m_id; }

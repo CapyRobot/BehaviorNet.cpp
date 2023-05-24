@@ -151,5 +151,104 @@ bool validateTransitionsConfig(nlohmann::json const& netConfig, std::vector<std:
 
 REGISTER_NET_CONFIG_VALIDATOR(&validateTransitionsConfig, "TransitionsConfigValidator");
 
+Transition::Transition(nlohmann::json config, Place::IdMap const& places)
+    : m_id(config.at("transition_id").get<std::string>())
+    , m_type(TransitionType::UNDEFINED)
+{
+    /**
+     * From here on, the config is assumed to be valid. See `validateTransitionsConfig`
+     */
+
+    if (config.contains("transition_type"))
+    {
+        m_type = TransitionType::_from_string_nocase(config.at("transition_type").get<std::string>().c_str());
+    }
+    else
+    {
+        std::cerr << "[WARN] Transition::Transition: undefined transition type, using default `AUTO`. transition_id: "
+                  << m_id << std::endl;
+        m_type = TransitionType::AUTO;
+    }
+    if (m_type == +TransitionType::UNDEFINED)
+    {
+        throw LogicError("Transition::Transition: uninitialized transition type.");
+    }
+
+    for (auto&& arcConfig : config.at("transition_arcs"))
+    {
+        Arc arc;
+        const auto placeId = arcConfig.at("place_id").get<std::string>();
+        arc.place = places.at(placeId);
+
+        if (arcConfig.contains("action_result_filter"))
+        {
+            for (auto const& status : arcConfig.at("action_result_filter"))
+            {
+                arc.resultStatusFilter.set(
+                    ActionExecutionStatus::_from_string_nocase(status.get<std::string>().c_str()));
+            }
+        }
+        else
+        {
+            arc.resultStatusFilter = 0U;
+        }
+
+        if (arcConfig.contains("token_content_filter"))
+        {
+            arc.contentBlockFilter = RegexFilter(arcConfig.at("token_content_filter").get<std::string>());
+        }
+
+        const auto type = ArcType::_from_string_nocase(arcConfig.at("type").get<std::string>().c_str());
+        if (type == +ArcType::OUTPUT)
+        {
+            m_outputArcs.push_back(arc);
+        }
+        else if (type == +ArcType::INPUT)
+        {
+            m_inputArcs.push_back(arc);
+        }
+        else
+        {
+            throw InvalidValueError("Transition::Transition: invalid arc type: " +
+                                    arcConfig.at("type").get<std::string>());
+        }
+    }
+}
+
+void Transition::trigger()
+{
+    if (!isEnabled())
+    {
+        throw LogicError("Transition::trigger: trying to trigger disabled transition. Use `isEnabled` first.");
+    }
+
+    std::vector<Token::SharedPtr> consumedTokens;
+    for (auto&& arc : m_inputArcs)
+    {
+        consumedTokens.push_back(arc.place->consumeToken(arc.resultStatusFilter));
+    }
+
+    auto outToken = Token::makeShared();
+    for (auto&& t : consumedTokens)
+    {
+        outToken->mergeContentBlocks(t);
+    }
+
+    for (auto&& arc : m_outputArcs)
+    {
+        if (arc.contentBlockFilter.has_value())
+        {
+            auto filteredToken = Token::makeShared();
+            filteredToken->mergeContentBlocks(outToken);
+            filteredToken->filterContentBlocks(arc.contentBlockFilter.value().getFilterFunc());
+            arc.place->insertToken(filteredToken);
+        }
+        else
+        {
+            arc.place->insertToken(outToken);
+        }
+    }
+}
+
 } // namespace bnet
 } // namespace capybot

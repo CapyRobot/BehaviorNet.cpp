@@ -57,5 +57,93 @@ bool validatePlacesConfig(nlohmann::json const& netConfig, std::vector<std::stri
 
 REGISTER_NET_CONFIG_VALIDATOR(&validatePlacesConfig, "PlacesConfigValidator");
 
+void Place::setAssociatedAction(ThreadPool& tp, std::string const& type, nlohmann::json const& parameters)
+{
+    if (m_action)
+    {
+        throw RuntimeError("Place::setAssociatedAction: trying to override existing action;"
+                           " likely a config file issue.");
+    }
+
+    m_action = ActionRegistry::create(tp, type, parameters);
+}
+
+void Place::insertToken(Token::SharedPtr token)
+{
+    if (isPassive())
+    {
+        m_tokensAvailable.push_back({token, ActionExecutionStatus::SUCCESS});
+    }
+    else
+    {
+        m_tokensBusy.push_back(token);
+    }
+}
+
+Token::SharedPtr Place::consumeToken(ActionExecutionStatusSet resultsAccepted)
+{
+    if (getNumberTokensAvailable(resultsAccepted) == 0U)
+    {
+        throw LogicError("Place::consumeToken: no tokens available for consumption. `getNumberTokensAvailable()` "
+                         "should have been called beforehand.");
+    }
+
+    Token::SharedPtr token{};
+    if (resultsAccepted.any())
+    {
+        for (auto it = m_tokensAvailable.begin(); it != m_tokensAvailable.end(); it++)
+        {
+            if (resultsAccepted.test(it->status))
+            {
+                token = it->tokenPtr;
+                m_tokensAvailable.erase(it);
+                break;
+            }
+        }
+    }
+    else
+    {
+        token = m_tokensAvailable.front().tokenPtr;
+        m_tokensAvailable.pop_front();
+    }
+    return token;
+}
+
+void Place::executeActionAsync()
+{
+    if (!isPassive())
+    {
+        m_action->executeAsync(getTokensBusy());
+    }
+}
+
+void Place::checkActionResults()
+{
+    if (!isPassive())
+    {
+        const auto actionResults = m_action->getEpochResults();
+
+        for (auto&& result : actionResults)
+        {
+            if (result.status != +ActionExecutionStatus::SUCCESS && result.status != +ActionExecutionStatus::FAILURE &&
+                result.status != +ActionExecutionStatus::ERROR) // not completed
+            {
+                continue;
+            }
+
+            auto it = std::find(m_tokensBusy.begin(), m_tokensBusy.end(), result.tokenPtr);
+            if (it != m_tokensBusy.end())
+            {
+                m_tokensBusy.erase(it);
+                m_tokensAvailable.push_back(result);
+            }
+            else
+            {
+                throw LogicError("Place::checkActionResults: action result id does not match any busy tokens.");
+            }
+        }
+    }
+}
+
 } // namespace bnet
 } // namespace capybot

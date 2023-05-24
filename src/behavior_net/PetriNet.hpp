@@ -42,7 +42,7 @@ public:
         : m_config(config)
     {
         m_places = Place::Factory::createPlaces(config);
-        m_transitions = Transition::createTransitions(config, m_places);
+        m_transitions = Transition::Factory::createTransitions(config, m_places);
 
         // m_incidenceMatrixPlus.reset(m_transitions.size(), m_places.size(), 0U);
         // m_incidenceMatrixMinus.reset(m_transitions.size(), m_places.size(), 0U);
