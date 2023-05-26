@@ -43,12 +43,6 @@ public:
     {
         m_places = Place::Factory::createPlaces(config);
         m_transitions = Transition::Factory::createTransitions(config, m_places);
-
-        // m_incidenceMatrixPlus.reset(m_transitions.size(), m_places.size(), 0U);
-        // m_incidenceMatrixMinus.reset(m_transitions.size(), m_places.size(), 0U);
-        // for (auto&& t : m_transitions)
-        // {
-        // }
     }
 
     /// @param newToken token to be added; will be moved so a token cannot be added more than once as tokens within the
@@ -130,27 +124,6 @@ private:
 
     Place::IdMap m_places;
     std::vector<Transition> m_transitions;
-
-    // TODO: not needed so far
-    // template <typename T>
-    // struct Matrix
-    // {
-    //     void reset(uint32_t rows, uint32_t cols, T initValue = {})
-    //     {
-    //         m_rows = rows;
-    //         m_cols = cols;
-    //         m_data = std::vector<T>(rows * cols, initValue);
-    //     }
-
-    //     T at(uint32_t row, uint32_t col) const { return m_data.at(col + row * m_cols); }
-    //     T& at(uint32_t row, uint32_t col) { return m_data[col + row * m_cols]; }
-
-    // private:
-    //     uint32_t m_rows{0}, m_cols{0};
-    //     std::vector<T> m_data{};
-    // };
-    // Matrix<uint32_t> m_incidenceMatrixPlus;
-    // Matrix<uint32_t> m_incidenceMatrixMinus;
 };
 
 } // namespace bnet
