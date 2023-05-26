@@ -21,6 +21,7 @@
 #include <behavior_net/Types.hpp>
 
 #include <condition_variable>
+#include <exception>
 #include <functional>
 #include <mutex>
 
@@ -55,7 +56,23 @@ public:
                 m_started = true;
                 m_done = false;
             }
-            m_return = m_func(); // TODO: try? it can be user provided code
+            try
+            {
+                m_return = m_func();
+            }
+            catch (std::exception& e)
+            {
+                std::cerr
+                    << "Task::executeSync: std::exception thrown by m_func(). Returning error action status. error = "
+                    << e.what() << std::endl;
+                m_return = ActionExecutionStatus::ERROR;
+            }
+            catch (...)
+            {
+                std::cerr << "Task::executeSync: unknown exception thrown by m_func(). Returning error action status."
+                          << std::endl;
+                m_return = ActionExecutionStatus::ERROR;
+            }
             {
                 std::lock_guard<std::mutex> lk(m_mtx);
                 m_done = true;
