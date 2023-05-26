@@ -56,7 +56,7 @@ public:
 
     std::function<ActionExecutionStatus()> createCallable(Token::ConstSharedPtr token) override
     {
-        return [&token, this]() -> ActionExecutionStatus {
+        return [token, this]() -> ActionExecutionStatus {
             auto host = m_host.get(token);
             auto port = m_port.get(token);
             auto executePath = m_executePath.get(token);

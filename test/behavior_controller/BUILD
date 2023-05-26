@@ -1,7 +1,9 @@
 
 cc_test(
     name = "behavior_controller_test",
-    srcs = ["ActionTests.cpp", "ControllerTests.cpp"],
+    srcs = [
+        # "ActionTests.cpp",
+    ],
     data = [
         "//config_samples:config_samples"
     ],

@@ -98,7 +98,7 @@
         "actions": [
             {
                 "place_id": "task_execution",
-                "type": "ACTION_TYPE_SLEEP",
+                "type": "TimerAction",
                 "params": {
                     "duration_ms": 3000,
                     "failure_rate": 0.25,

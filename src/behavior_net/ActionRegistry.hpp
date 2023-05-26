@@ -45,9 +45,15 @@ public:
     {
         if (s_registry.m_createFunctionMap.find(actionType) == s_registry.m_createFunctionMap.end())
         {
+            std::vector<std::string> registeredTypes{};
+            for (auto&& [key, _] : s_registry.m_createFunctionMap)
+            {
+                registeredTypes.push_back(key);
+            }
             throw Exception(ExceptionType::RUNTIME_ERROR,
                             "ActionRegistry::create: requested action type has not been registered.")
-                .appendMetadata("requested actionType", actionType);
+                .appendMetadata("requested actionType", actionType)
+                .appendMetadata("registered types", registeredTypes);
         }
 
         auto actionImpl = s_registry.m_createFunctionMap.at(actionType)(parameters);

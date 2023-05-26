@@ -19,25 +19,31 @@
 
 #include <behavior_net/Controller.hpp>
 
+#include "TestsCommon.hpp"
+
 #include <chrono>
+#include <string>
 #include <thread>
 
 using namespace capybot;
 
-TEST_CASE("The controller properly initialized from config files.", "[BehaviorController/Controller]")
+TEST_CASE("The controller properly initialized from config files, and we can trigger a transition.",
+          "[BehaviorController/Controller]")
 {
     auto config = bnet::NetConfig(
         "config_samples/config.json"); // TODO: create test specific config once we have a stable config format
     auto net = bnet::PetriNet::create(config);
     bnet::Controller controller(config, std::move(net));
 
-    controller.addToken({}, "A");
-    controller.addToken({}, "A");
-    controller.addToken({}, "A");
+    controller.addToken(createRobotTokenContent(), "A");
+    controller.addToken(createRobotTokenContent(), "A");
+    controller.addToken(createRobotTokenContent(), "A");
 
     controller.runDetached();
 
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    controller.getNet().triggerTransition("T1", true);
+
+    std::this_thread::sleep_for(std::chrono::seconds(3));
 
     controller.stop();
 }

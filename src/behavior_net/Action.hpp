@@ -17,10 +17,10 @@
 
 #pragma once
 
+#include <behavior_net/Common.hpp>
 #include <behavior_net/ThreadPool.hpp>
 #include <behavior_net/Token.hpp>
 #include <behavior_net/Types.hpp>
-#include <behavior_net/Common.hpp>
 
 #include <list>
 

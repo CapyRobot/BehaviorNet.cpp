@@ -44,7 +44,10 @@ public:
     inline static SharedPtr makeShared() { return std::make_shared<Token>(); }
     inline static UniquePtr makeUnique() { return std::make_unique<Token>(); }
 
-    bool hasKey(std::string const& key) const { return m_contentBlocks.find(key) != m_contentBlocks.end(); }
+    bool hasKey(std::string const& key) const
+    {
+        return !m_contentBlocks.empty() && m_contentBlocks.find(key) != m_contentBlocks.end();
+    }
 
     nlohmann::json getContent(std::string const& key) const
     {
@@ -98,7 +101,7 @@ public:
     }
 
 private:
-    std::unordered_map<std::string, nlohmann::json> m_contentBlocks;
+    std::unordered_map<std::string, nlohmann::json> m_contentBlocks; // TODO: use simple json, no need for a map
 };
 
 } // namespace bnet

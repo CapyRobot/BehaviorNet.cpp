@@ -35,3 +35,11 @@ using namespace capybot::bnet;
             }                                                                                                          \
         } while (false);                                                                                               \
     }
+
+inline nlohmann::json createRobotTokenContent(std::string const& host = "localhost", int port = 80)
+{
+    nlohmann::json robotBlock{};
+    robotBlock["robot"]["host"] = host;
+    robotBlock["robot"]["port"] = port;
+    return robotBlock;
+}

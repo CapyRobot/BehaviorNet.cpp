@@ -22,6 +22,7 @@
 
 #include <3rd_party/cpp-httplib/httplib.h>
 
+#include <atomic>
 #include <iostream>
 #include <memory>
 
@@ -30,37 +31,47 @@ namespace capybot
 namespace bnet
 {
 
-// TODO:
-//     - server should not depend on Controller, create a separate interface
-//     - create ServerI
+// TODO: create ServerI
 
-class Controller;
+struct ControllerCallbacks
+{
+    std::function<void(nlohmann::json const& contentBlocks, std::string_view placeId)> addToken;
+    std::function<nlohmann::json()> getNetMarking;
+    std::function<void(std::string_view const& id)> triggerManualTransition;
+};
 
 class HttpServer
 {
 
 public:
-    HttpServer(nlohmann::json const& config, Controller* controllerPtr)
-        : m_controller(controllerPtr)
+    HttpServer(nlohmann::json const& config, ControllerCallbacks const& controllerCbs)
+        : m_controllerCbs(controllerCbs)
         , m_addr(config.at("address").get<std::string>())
         , m_port(config.at("port").get<int>())
     {
         std::cout << config << std::endl;
     }
 
+    ~HttpServer() { stop(); }
+
     void start()
     {
         m_executionThread = std::thread([this] { runServer(); });
     }
+
     void stop()
     {
         m_server->stop();
-        m_executionThread.join();
+        if (m_executionThread.joinable())
+        {
+            m_executionThread.join();
+        }
     }
 
 private:
     void runServer()
     {
+        std::cout << "HttpServer::runServer: starting HTTP server..." << std::endl;
         httplib::Server server;
         m_server = &server;
 
@@ -94,12 +105,13 @@ private:
         });
 
         server.listen(m_addr, m_port);
+        std::cout << "HttpServer::runServer: exiting..." << std::endl;
     }
 
     void setCallbacks(httplib::Server& server);
 
     httplib::Server* m_server{nullptr};
-    Controller* m_controller;
+    ControllerCallbacks m_controllerCbs;
 
     std::string m_addr;
     int m_port;
@@ -114,7 +126,7 @@ public:
         : m_tp(config.get().at("controller").at("thread_poll_workers").get<uint32_t>())
         , m_config(config.get().at("controller"))
         , m_net(std::move(petriNet))
-        , m_httpServer(config.get().at("controller").at("http_server"), this)
+        , m_httpServer(config.get().at("controller").at("http_server"), createCallbacks())
     {
         Place::Factory::createActions(m_tp, config.get().at("controller").at("actions"), m_net->getPlaces());
     }
@@ -124,9 +136,9 @@ public:
     void addToken(nlohmann::json const& contentBlocks, std::string_view placeId)
     {
         auto token = Token::makeUnique();
-        for (auto&& block : contentBlocks)
+        for (nlohmann::json::const_iterator it = contentBlocks.begin(); it != contentBlocks.end(); ++it)
         {
-            token->addContentBlock(block.at("key"), block.at("content"));
+            token->addContentBlock(it.key(), it.value());
         }
         m_net->addToken(token, placeId);
 
@@ -135,12 +147,15 @@ public:
 
     void run()
     {
+        std::cout << "Controller::run: running... " << std::endl;
         m_running.store(true);
         m_httpServer.start();
         while (m_running.load())
         {
+            m_net->prettyPrintState();
             runEpoch();
         }
+        std::cout << "Controller::run: done running." << std::endl;
     }
 
     void runDetached()
@@ -201,10 +216,19 @@ public:
     PetriNet& getNet() { return *m_net; }
 
 private:
+    ControllerCallbacks createCallbacks()
+    {
+        return ControllerCallbacks{
+            .addToken = [this](nlohmann::json const& contentBlocks,
+                               std::string_view placeId) { addToken(contentBlocks, placeId); },
+            .getNetMarking = [this]() -> nlohmann::json { return getNet().getMarking(); },
+            .triggerManualTransition = [this](std::string_view const& id) { getNet().triggerTransition(id, true); }};
+    }
+
     ThreadPool m_tp;
     nlohmann::json const& m_config;
 
-    std::atomic<bool> m_running{false}; // TODO: error handling on logic
+    std::atomic_bool m_running{false}; // TODO: error handling on logic
     std::thread m_runDetachedThread;
 
     std::unique_ptr<PetriNet> m_net;
@@ -216,16 +240,16 @@ void HttpServer::setCallbacks(httplib::Server& server)
 {
     server.Post("/add_token", [this](const httplib::Request& req, httplib::Response& res) {
         nlohmann::json payload = nlohmann::json::parse(req.body);
-        m_controller->addToken(payload.at("content_blocks"), payload.at("place_id").get<std::string>());
+        m_controllerCbs.addToken(payload.at("content_blocks"), payload.at("place_id").get<std::string>());
         res.set_content("success!", "application/json");
     });
     server.Get("/get_marking", [this](const httplib::Request& req, httplib::Response& res) {
-        nlohmann::json marking = m_controller->getNet().getMarking();
+        nlohmann::json marking = m_controllerCbs.getNetMarking();
         res.set_content(marking.dump(), "application/json");
     });
     server.Post("/trigger_manual_transition/(.*)", [this](const httplib::Request& req, httplib::Response& res) {
         auto id = req.matches[1];
-        m_controller->getNet().triggerTransition(id.str(), true);
+        m_controllerCbs.triggerManualTransition(id.str());
     });
 }
 

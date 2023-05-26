@@ -28,7 +28,7 @@ using namespace capybot;
 // {
 //     bnet::ThreadPool tp(8);
 //     nlohmann::json actionConfig = nlohmann::json::parse("{\"duration_ms\": 100}");
-//     auto action = bnet::Action::Factory::create(tp, bnet::Action::Factory::ACTION_TYPE_SLEEP, actionConfig);
+//     auto action = bnet::Action::Factory::create(tp, bnet::Action::Factory::TimerAction, actionConfig);
 
 //     constexpr uint32_t NUMBER_TOKENS{4};
 //     bnet::Token::SharedPtrVec tokenSrcVector(NUMBER_TOKENS);
@@ -53,7 +53,7 @@ using namespace capybot;
 // {
 //     bnet::ThreadPool tp(8);
 //     nlohmann::json actionConfig = nlohmann::json::parse("{\"duration_ms\": 500}");
-//     auto action = bnet::Action::Factory::create(tp, bnet::Action::Factory::ACTION_TYPE_SLEEP, actionConfig);
+//     auto action = bnet::Action::Factory::create(tp, bnet::Action::Factory::TimerAction, actionConfig);
 
 //     constexpr uint32_t NUMBER_TOKENS{4};
 //     bnet::Token::SharedPtrVec tokenSrcVector(NUMBER_TOKENS);

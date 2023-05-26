@@ -21,6 +21,7 @@
 #include <behavior_net/Place.hpp>
 #include <behavior_net/Token.hpp>
 #include <behavior_net/Transition.hpp>
+#include <behavior_net/Types.hpp>
 
 #include <memory>
 #include <string_view>
@@ -72,7 +73,12 @@ public:
         std::cout << "Marking:" << std::endl;
         for (auto&& [id, placePtr] : m_places)
         {
-            std::cout << "\tPlace " << id << ": " << placePtr->getNumberTokensTotal() << std::endl;
+            std::cout << "\tPlace " << id << ": " << placePtr->getNumberTokensTotal()
+                      << " [available=" << placePtr->getNumberTokensAvailable() << "]"
+                      << " [succcess=" << placePtr->getNumberTokensAvailable(1 << ActionExecutionStatus::SUCCESS) << "]"
+                      << " [failure=" << placePtr->getNumberTokensAvailable(1 << ActionExecutionStatus::FAILURE) << "]"
+                      << " [error=" << placePtr->getNumberTokensAvailable(1 << ActionExecutionStatus::ERROR) << "]"
+                      << std::endl;
         }
     }
 

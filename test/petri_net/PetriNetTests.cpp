@@ -17,9 +17,9 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <behavior_net/Common.hpp>
 #include <behavior_net/Config.hpp>
 #include <behavior_net/PetriNet.hpp>
-#include <behavior_net/Common.hpp>
 
 #include "TestsCommon.hpp"
 
@@ -38,8 +38,8 @@ TEST_CASE("We can manually trigger transitions.", "[PetriNet]")
 
     auto tokenA = Token::makeUnique();
     auto tokenB = Token::makeUnique();
-    tokenA->addContentBlock("type", nlohmann::json());
-    tokenB->addContentBlock("type", nlohmann::json());
+    tokenA->addContentBlock("type", {});
+    tokenB->addContentBlock("type", {});
     net->addToken(tokenA, "A");
     net->addToken(tokenB, "A");
 
