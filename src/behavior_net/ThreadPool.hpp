@@ -20,6 +20,7 @@
 #include <3rd_party/taskflow/taskflow.hpp>
 #include <behavior_net/Types.hpp>
 
+#include <atomic>
 #include <condition_variable>
 #include <exception>
 #include <functional>
@@ -31,12 +32,16 @@ namespace bnet
 {
 
 /**
- * TODO: implementation is just a quick prototype, actual implementation should be cleaned up
+ * @brief Prototype as a simple thread pool for executing async actions.
  *
  */
 class ThreadPool
 {
 public:
+    /**
+     * @brief Task element to be executed by the thread pool.
+     *
+     */
     class Task
     {
     public:
@@ -48,7 +53,7 @@ public:
         {
         }
 
-        /// Execute task synchronously - used by the TP
+        /// Execute task synchronously - this call will block
         void executeSync()
         {
             {
@@ -81,7 +86,7 @@ public:
         }
 
         /// Get return value after completion
-        /// @throws ... if the task was not started
+        /// @return action execution status
         ActionExecutionStatus getStatus(uint32_t timeoutUs = 0U) const
         {
             std::unique_lock<std::mutex> lk(m_mtx);
@@ -111,15 +116,27 @@ public:
         : m_executor(numberOfThreads)
     {
     }
-    ~ThreadPool() {}
 
-    /// @brief add task to the thread pool queue
+    ~ThreadPool()
+    {
+        m_stopped.store(true);
+        std::cout << "[ThreadPool::~ThreadPool] Stopping ThreadPoll; waiting for unfinished tasks ..." << std::endl;
+        m_executor.wait_for_all();
+        std::cout << "[ThreadPool::~ThreadPool] Stopping ThreadPoll ... done." << std::endl;
+    }
+
+    /// @brief add task to the thread pool queue for execution
     void executeAsync(Task& task)
     {
+        if (m_stopped.load()) // ignore new tasks while on destruction
+        {
+            return;
+        }
         m_executor.silent_async([&task] { task.executeSync(); });
     }
 
 private:
+    std::atomic_bool m_stopped{false};
     tf::Executor m_executor;
 };
 
