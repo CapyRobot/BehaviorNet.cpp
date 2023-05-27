@@ -1,0 +1,91 @@
+/*
+ * Copyright (C) 2023 Eduardo Rocha
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+ * Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+#include <behavior_net/server_impl/HttpServer.hpp>
+#include <memory>
+
+namespace capybot
+{
+namespace bnet
+{
+
+HttpServer::HttpServer(nlohmann::json const& config, ControllerCallbacks const& controllerCbs)
+    : m_controllerCbs(controllerCbs)
+    , m_addr(config.at("address").get<std::string>())
+    , m_port(config.at("port").get<int>())
+{
+    std::cout << config << std::endl;
+}
+
+void HttpServer::runServer()
+{
+    std::cout << "HttpServer::runServer: starting HTTP server..." << std::endl;
+    httplib::Server server;
+    m_server = &server;
+
+    setCallbacks(server);
+
+    // TODO: proper error handling
+    server.set_exception_handler([](const auto& req, auto& res, std::exception_ptr ep) {
+        auto fmt = "<h1>Error 500</h1><p>%s</p>";
+        char buf[BUFSIZ];
+        try
+        {
+            std::rethrow_exception(ep);
+        }
+        catch (std::exception& e)
+        {
+            snprintf(buf, sizeof(buf), fmt, e.what());
+        }
+        catch (...)
+        {
+            snprintf(buf, sizeof(buf), fmt, "Unknown Exception");
+        }
+        res.set_content(buf, "text/html");
+        res.status = 500;
+    });
+
+    server.set_error_handler([](const auto& req, auto& res) {
+        auto fmt = "<p>Error Status: <span style='color:red;'>%d</span></p>";
+        char buf[BUFSIZ];
+        snprintf(buf, sizeof(buf), fmt, res.status);
+        res.set_content(buf, "text/html");
+    });
+
+    server.listen(m_addr, m_port);
+    std::cout << "HttpServer::runServer: exiting..." << std::endl;
+}
+
+void HttpServer::setCallbacks(httplib::Server& server)
+{
+    server.Post("/add_token", [this](const httplib::Request& req, httplib::Response& res) {
+        nlohmann::json payload = nlohmann::json::parse(req.body);
+        m_controllerCbs.addToken(payload.at("content_blocks"), payload.at("place_id").get<std::string>());
+        res.set_content("success!", "application/json");
+    });
+    server.Get("/get_marking", [this](const httplib::Request& req, httplib::Response& res) {
+        nlohmann::json marking = m_controllerCbs.getNetMarking();
+        res.set_content(marking.dump(), "application/json");
+    });
+    server.Post("/trigger_manual_transition/(.*)", [this](const httplib::Request& req, httplib::Response& res) {
+        auto id = req.matches[1];
+        m_controllerCbs.triggerManualTransition(id.str());
+    });
+}
+
+} // namespace bnet
+} // namespace capybot
