@@ -45,8 +45,8 @@ BETTER_ENUM(ServerType, uint32_t, HTTP);
 class IServer
 {
 public:
-    template <ServerType type>
-    static std::unique_ptr<IServer> create(nlohmann::json const& config, ControllerCallbacks const& controllerCbs);
+    static std::unique_ptr<IServer> create(nlohmann::json const& controllerConfig,
+                                           ControllerCallbacks const& controllerCbs);
 
     virtual void start() = 0;
     virtual void stop() = 0;

@@ -27,7 +27,7 @@ Controller::Controller(NetConfig const& config, std::unique_ptr<PetriNet> petriN
     : m_tp(config.get().at("controller").at("thread_poll_workers").get<uint32_t>())
     , m_config(config.get().at("controller"))
     , m_net(std::move(petriNet))
-    , m_server(IServer::create<ServerType::HTTP>(config.get().at("controller").at("http_server"), createCallbacks()))
+    , m_server(IServer::create(config.get().at("controller"), createCallbacks()))
 {
     Place::Factory::createActions(m_tp, config.get().at("controller").at("actions"), m_net->getPlaces());
 }
@@ -54,7 +54,10 @@ void Controller::run()
     std::cout << "Controller::run: running... " << std::endl;
 
     m_running.store(true);
-    m_server->start();
+    if (m_server)
+    {
+        m_server->start();
+    }
     while (m_running.load())
     {
         m_net->prettyPrintState();
@@ -76,7 +79,10 @@ void Controller::runDetached()
 void Controller::stop()
 {
     m_running.store(false);
-    m_server->stop();
+    if (m_server)
+    {
+        m_server->stop();
+    }
     if (m_runDetachedThread.joinable())
     {
         m_runDetachedThread.join();

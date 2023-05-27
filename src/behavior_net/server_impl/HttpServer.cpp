@@ -15,6 +15,8 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <3rd_party/nlohmann/json.hpp>
+#include <behavior_net/Config.hpp>
 #include <behavior_net/server_impl/HttpServer.hpp>
 #include <memory>
 
@@ -22,6 +24,25 @@ namespace capybot
 {
 namespace bnet
 {
+
+bool validateHttpServerConfig(nlohmann::json const& netConfig, std::vector<std::string>& errorMessages)
+{
+    errorMessages.clear();
+
+    if (!netConfig.contains("controller") || !netConfig.at("controller").contains("http_server"))
+    {
+        return true; // http server not in config
+    }
+    auto serverConfig = getValueAtPath<nlohmann::json>(netConfig, {"controller", "http_server"}, errorMessages).value();
+
+    // check expected info exists in expected format
+    std::ignore = getValueAtKey<std::string>(serverConfig, "address", errorMessages);
+    std::ignore = getValueAtKey<int>(serverConfig, "port", errorMessages);
+
+    return errorMessages.empty();
+}
+
+REGISTER_NET_CONFIG_VALIDATOR(&validateHttpServerConfig, "HttpServerConfigValidator");
 
 HttpServer::HttpServer(nlohmann::json const& config, ControllerCallbacks const& controllerCbs)
     : m_controllerCbs(controllerCbs)

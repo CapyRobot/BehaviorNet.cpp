@@ -15,8 +15,6 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#pragma once
-
 #include <behavior_net/Common.hpp>
 #include <behavior_net/Controller.hpp>
 #include <behavior_net/Types.hpp>
@@ -27,19 +25,16 @@ namespace capybot
 namespace bnet
 {
 
-template <ServerType type>
-std::unique_ptr<IServer> IServer::create(const nlohmann::json& config, const ControllerCallbacks& controllerCbs)
+std::unique_ptr<IServer> IServer::create(nlohmann::json const& controllerConfig,
+                                         ControllerCallbacks const& controllerCbs)
 {
-    throw Exception(ExceptionType::NOT_IMPLEMENTED, "[IServer::create] type not implemented")
-        .appendMetadata("server type", type._to_string());
-    return nullptr;
-}
+    if (controllerConfig.contains("http_server"))
+    {
+        return std::make_unique<HttpServer>(controllerConfig.at("http_server"), controllerCbs);
+    }
 
-template <>
-std::unique_ptr<IServer> IServer::create<ServerType::HTTP>(const nlohmann::json& config,
-                                                           const ControllerCallbacks& controllerCbs)
-{
-    return std::make_unique<HttpServer>(config, controllerCbs);
+    std::cerr << "[IServer::create] no server in config file - running serverless." << std::endl;
+    return nullptr;
 }
 
 } // namespace bnet
