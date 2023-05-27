@@ -16,6 +16,7 @@
  */
 
 #include <behavior_net/Controller.hpp>
+#include <behavior_net/Types.hpp>
 
 namespace capybot
 {
@@ -45,7 +46,13 @@ void Controller::addToken(nlohmann::json const& contentBlocks, std::string_view 
 
 void Controller::run()
 {
+    if (m_running.load())
+    {
+        throw Exception(ExceptionType::LOGIC_ERROR, "[Controller::run] controller is already running.");
+    }
+
     std::cout << "Controller::run: running... " << std::endl;
+
     m_running.store(true);
     m_server->start();
     while (m_running.load())
@@ -53,12 +60,16 @@ void Controller::run()
         m_net->prettyPrintState();
         runEpoch();
     }
+
     std::cout << "Controller::run: done running." << std::endl;
 }
 
 void Controller::runDetached()
 {
-    // TODO: assert joinable
+    if (m_running.load() || m_runDetachedThread.joinable())
+    {
+        throw Exception(ExceptionType::LOGIC_ERROR, "[Controller::runDetached] controller is already running.");
+    }
     m_runDetachedThread = std::thread([this] { run(); });
 }
 

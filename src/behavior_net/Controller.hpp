@@ -78,11 +78,10 @@ private:
     ThreadPool m_tp;
     nlohmann::json const& m_config;
 
-    std::atomic_bool m_running{false}; // TODO: error handling on logic
+    std::atomic_bool m_running{false};
     std::thread m_runDetachedThread;
 
     std::unique_ptr<PetriNet> m_net;
-
     std::unique_ptr<IServer> m_server;
 };
 
