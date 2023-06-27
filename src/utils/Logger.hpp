@@ -35,7 +35,7 @@
                                                           .lineNumber = __LINE__,                                      \
                                                           .timeMs = std::chrono::system_clock::now()})
 
-#define LOG(level) LOG_TAG(level, MODULE_TAG)
+#define LOG(level) LOG_TAGGED(level, MODULE_TAG)
 
 namespace capybot
 {
