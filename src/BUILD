@@ -29,6 +29,7 @@ cc_library(
         "behavior_net/action_impl/TimerAction.hpp",
         "behavior_net/action_impl/HttpGetAction.hpp",
         "behavior_net/server_impl/HttpServer.hpp",
+        "utils/Mutex.hpp",
     ] + glob(["3rd_party/**/*.hpp"]) + glob(["3rd_party/**/*.h"]),
     copts = ["-std=c++20"],
     linkopts = ["-lpthread"],
