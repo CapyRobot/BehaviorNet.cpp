@@ -28,12 +28,14 @@
 #include <string>
 #include <vector>
 
-#define LOG(level)                                                                                                     \
+#define LOG_TAGGED(level, tag)                                                                                         \
     capybot::log::LogStream(capybot::log::MessageMetadata{.logLevel = capybot::log::LogLevel::level,                   \
-                                                          .module = MODULE_TAG,                                        \
+                                                          .module = tag,                                               \
                                                           .fileName = __FILE__,                                        \
                                                           .lineNumber = __LINE__,                                      \
                                                           .timeMs = std::chrono::system_clock::now()})
+
+#define LOG(level) LOG_TAG(level, MODULE_TAG)
 
 namespace capybot
 {

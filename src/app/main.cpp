@@ -16,13 +16,20 @@
  */
 
 #include <3rd_party/taywee/args.hpp>
-#include <behavior_net/Controller.hpp>
+
 #include <cstdlib>
 #include <optional>
+#include <stdexcept>
+
+#include <behavior_net/Controller.hpp>
+#include <utils/Logger.hpp>
+
+using namespace capybot;
 
 struct CmdLineArgs
 {
     std::string configPath{"config_samples/config.json"};
+    log::LogLevel logLevel{log::LogLevel::INFO};
 };
 
 std::optional<CmdLineArgs> parseArgs(int argc, char** argv)
@@ -32,6 +39,8 @@ std::optional<CmdLineArgs> parseArgs(int argc, char** argv)
     args::HelpFlag help(parser, "help", "<help menu>", {'h', "help"});
 
     args::Positional<std::string> configPath(parser, "config_path", "Configuration file path.");
+    args::ValueFlag<std::string> logLevel(parser, "log_level", "See capybot::log::LogLevel for options.",
+                                          {"log_level"});
 
     try
     {
@@ -56,7 +65,33 @@ std::optional<CmdLineArgs> parseArgs(int argc, char** argv)
     {
         cliArgs.configPath = args::get(configPath);
     }
+    if (logLevel)
+    {
+        try
+        {
+            cliArgs.logLevel = log::LogLevel::_from_string_nocase(args::get(logLevel).c_str());
+        }
+        catch (const std::runtime_error& e)
+        {
+            std::cerr << "\n==>> Failed to parse command line arguments.\n"
+                      << "==>> Failed to cast log level from string.\n"
+                      << "==>> error info: " << e.what() << "\n\n"
+                      << "==>> help:\n"
+                      << parser;
+            return std::nullopt;
+        }
+    }
     return cliArgs;
+}
+
+void initLogger(log::LogLevel level)
+{
+    auto logger = std::make_unique<log::DefaultLogger>();
+    log::Logger::set(std::move(logger));
+
+    log::Logger::get()->setLogLevel(level);
+    log::Logger::get()->enableTimestamps();
+    log::Logger::get()->enableAutoNewline();
 }
 
 int main(int argc, char** argv)
@@ -67,7 +102,8 @@ int main(int argc, char** argv)
         return EXIT_SUCCESS;
     }
 
-    using namespace capybot;
+    initLogger(cliArgs->logLevel);
+
     auto config = bnet::NetConfig(cliArgs->configPath);
     auto net = bnet::PetriNet::create(config);
 
