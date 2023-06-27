@@ -98,18 +98,5 @@ protected:
     mutable std::string m_fullErrorMsg;
 };
 
-namespace log
-{
-inline void timePoint(std::string const& msg)
-{
-    static std::mutex m;
-    std::unique_lock<std::mutex> lk(m);
-
-    auto tp = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
-    auto tpMs = tp.time_since_epoch();
-    std::cout << "[" << tpMs.count() % 10'000 << " ms] " << msg << std::endl;
-}
-} // namespace log
-
 } // namespace bnet
 } // namespace capybot

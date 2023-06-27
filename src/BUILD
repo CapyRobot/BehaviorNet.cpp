@@ -12,6 +12,7 @@ cc_library(
         "behavior_net/action_impl/HttpGetAction.cpp",
         "behavior_net/server_impl/HttpServer.cpp",
         "behavior_net/server_impl/ServerFactory.cpp",
+        "utils/Logger.cpp",
     ],
     hdrs = [
         "behavior_net/PetriNet.hpp",
@@ -29,6 +30,7 @@ cc_library(
         "behavior_net/action_impl/TimerAction.hpp",
         "behavior_net/action_impl/HttpGetAction.hpp",
         "behavior_net/server_impl/HttpServer.hpp",
+        "utils/Logger.hpp",
         "utils/Mutex.hpp",
     ] + glob(["3rd_party/**/*.hpp"]) + glob(["3rd_party/**/*.h"]),
     copts = ["-std=c++20"],

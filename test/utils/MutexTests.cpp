@@ -17,13 +17,10 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include <chrono>
-#include <memory>
 #include <utils/Mutex.hpp>
 
-#include <chrono>
-#include <iostream>
 #include <thread>
+#include <chrono>
 
 // end of scope will call lock destructor and unlock handle
 // This logic is used to facilitate testing, but it should be avoided in general since the dangling handle is dangerous.
