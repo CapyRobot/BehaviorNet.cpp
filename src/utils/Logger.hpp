@@ -19,6 +19,7 @@
 
 #include <3rd_party/better_enums/enums.h>
 
+#include <atomic>
 #include <chrono>
 #include <functional>
 #include <iostream>
@@ -177,15 +178,23 @@ class ScopedTracer
 {
     const std::string m_id;
     const std::string MODULE_TAG;
+    const uint64_t m_uniqueId;
+
+    static int uniqueId()
+    {
+        static std::atomic_uint64_t idCounter{0};
+        return idCounter++;
+    }
 
 public:
     ScopedTracer(std::string const& module, std::string const& id)
         : m_id(id)
         , MODULE_TAG(module)
+        , m_uniqueId(uniqueId())
     {
-        LOG(TRACE) << "[ScopedTracer:start] " << m_id << "\n";
+        LOG(TRACE) << "[ScopedTracer : start... : " << m_id << "] [uid:" << m_uniqueId << "]\n";
     }
-    ~ScopedTracer() { LOG(TRACE) << "[ScopedTracer:end] " << m_id << "\n"; }
+    ~ScopedTracer() { LOG(TRACE) << "[ScopedTracer : .....end : " << m_id << "] [uid:" << m_uniqueId << "]\n"; }
 };
 
 } // namespace log
