@@ -31,6 +31,8 @@ namespace bnet
 
 class Token
 {
+    static constexpr const char* MODULE_TAG{"Token"};
+
 public:
     static constexpr uint64_t INVALID_TOKEN_ID{0UL};
 

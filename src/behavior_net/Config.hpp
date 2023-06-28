@@ -37,6 +37,8 @@ namespace bnet
 
 class NetConfig
 {
+    static constexpr const char* MODULE_TAG{"NetConfig"};
+
 public:
     NetConfig(std::string const& configFilePath)
     {
@@ -60,7 +62,8 @@ public:
 
     static bool registerValidator(ValidatorFunc validator, std::string const& validatorId)
     {
-        std::cout << "[INFO] registering NetConfig validator: " << validatorId << std::endl;
+        std::cout << "Registering NetConfig validator: " << validatorId
+                  << std::endl; // cannot use LOG() here because the logger has not been init yet
         s_validators.push_back(Validator{.id = validatorId, .func = std::move(validator)});
         return true;
     }

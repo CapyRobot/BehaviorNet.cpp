@@ -42,6 +42,8 @@ namespace bnet
  */
 class TimerAction : public IActionImpl
 {
+    static constexpr const char* MODULE_TAG{"TimerAction"};
+
 public:
     TimerAction(nlohmann::json const config)
         : m_durationMs(config.at("duration_ms"))

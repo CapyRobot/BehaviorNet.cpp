@@ -17,6 +17,7 @@
 
 #include <behavior_net/Controller.hpp>
 #include <behavior_net/Types.hpp>
+#include <utils/Logger.hpp>
 
 namespace capybot
 {
@@ -34,6 +35,8 @@ Controller::Controller(NetConfig const& config, std::unique_ptr<PetriNet> petriN
 
 void Controller::addToken(nlohmann::json const& contentBlocks, std::string_view placeId)
 {
+    LOG(DEBUG) << "addToken @ " << placeId << "; content = " << contentBlocks << log::endl;
+
     auto token = Token::makeUnique();
     for (nlohmann::json::const_iterator it = contentBlocks.begin(); it != contentBlocks.end(); ++it)
     {
@@ -46,12 +49,14 @@ void Controller::addToken(nlohmann::json const& contentBlocks, std::string_view 
 
 void Controller::run()
 {
+    SCOPED_LOG_TRACER("run");
+
     if (m_running.load())
     {
         throw Exception(ExceptionType::LOGIC_ERROR, "[Controller::run] controller is already running.");
     }
 
-    std::cout << "Controller::run: running... " << std::endl;
+    LOG(INFO) << "run: running... " << log::endl;
 
     m_running.store(true);
     if (m_server)
@@ -63,8 +68,6 @@ void Controller::run()
         m_net->prettyPrintState();
         runEpoch();
     }
-
-    std::cout << "Controller::run: done running." << std::endl;
 }
 
 void Controller::runDetached()
@@ -78,6 +81,8 @@ void Controller::runDetached()
 
 void Controller::stop()
 {
+    SCOPED_LOG_TRACER("stop");
+
     m_running.store(false);
     if (m_server)
     {
@@ -91,7 +96,8 @@ void Controller::stop()
 
 void Controller::runEpoch()
 {
-    // log::timePoint("runEpoch start...");
+    SCOPED_LOG_TRACER("runEpoch");
+
     const uint32_t periodMs = m_config.at("epoch_period_ms").get<uint32_t>();
 
     // execute all actions
@@ -122,9 +128,6 @@ void Controller::runEpoch()
             t.trigger();
         }
     }
-
-    // log::timePoint("runEpoch ... done");
-    // m_net->prettyPrintState();
 }
 
 ControllerCallbacks Controller::createCallbacks()

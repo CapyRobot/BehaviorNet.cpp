@@ -109,8 +109,9 @@ int main(int argc, char** argv)
 
     bnet::Controller controller(config, std::move(net));
 
-    std::cout << "running ... " << std::endl;
+    LOG_TAGGED(DEBUG, "main") << "Running ... " << capybot::log::endl;
     controller.run();
+    LOG_TAGGED(DEBUG, "main") << " ... done." << capybot::log::endl;
 
     return EXIT_SUCCESS;
 }

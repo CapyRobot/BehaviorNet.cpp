@@ -33,6 +33,8 @@ namespace bnet
 
 class Place
 {
+    static constexpr const char* MODULE_TAG{"Place"};
+
 public:
     using SharedPtr = std::shared_ptr<Place>;
     using IdMap = std::map<std::string, SharedPtr>;

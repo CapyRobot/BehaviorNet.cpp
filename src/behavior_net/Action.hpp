@@ -61,6 +61,8 @@ public:
 /// @brief Action object to be associated with a place
 class Action
 {
+    static constexpr const char* MODULE_TAG{"Action"};
+
 public:
     using UniquePtr = std::unique_ptr<Action>;
 

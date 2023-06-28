@@ -33,7 +33,7 @@ std::unique_ptr<IServer> IServer::create(nlohmann::json const& controllerConfig,
         return std::make_unique<HttpServer>(controllerConfig.at("http_server"), controllerCbs);
     }
 
-    std::cerr << "[IServer::create] no server in config file - running serverless." << std::endl;
+    LOG_TAGGED(INFO, "IServer::create") << "No server in config file - running serverless." << log::endl;
     return nullptr;
 }
 

@@ -178,8 +178,7 @@ Transition::Transition(nlohmann::json config, Place::IdMap const& places)
     }
     else
     {
-        std::cerr << "[WARN] Transition::Transition: undefined transition type, using default `AUTO`. transition_id: "
-                  << m_id << std::endl;
+        LOG(WARN) << "Undefined transition type, using default `AUTO`. transition_id: " << m_id << log::endl;
         m_type = TransitionType::AUTO;
     }
     if (m_type == +TransitionType::UNDEFINED)

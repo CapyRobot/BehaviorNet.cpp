@@ -19,8 +19,8 @@
 
 #include <utils/Mutex.hpp>
 
-#include <thread>
 #include <chrono>
+#include <thread>
 
 // end of scope will call lock destructor and unlock handle
 // This logic is used to facilitate testing, but it should be avoided in general since the dangling handle is dangerous.

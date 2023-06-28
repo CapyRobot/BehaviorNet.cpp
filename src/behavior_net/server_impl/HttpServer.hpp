@@ -27,6 +27,7 @@ namespace bnet
 
 class HttpServer : public IServer
 {
+    static constexpr const char* MODULE_TAG{"HttpServer"};
 
 public:
     HttpServer(nlohmann::json const& config, ControllerCallbacks const& controllerCbs);

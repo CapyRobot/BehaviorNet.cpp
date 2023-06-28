@@ -44,6 +44,8 @@ BETTER_ENUM(ServerType, uint32_t, HTTP);
 
 class IServer
 {
+    static constexpr const char* MODULE_TAG{"IServer"};
+
 public:
     static std::unique_ptr<IServer> create(nlohmann::json const& controllerConfig,
                                            ControllerCallbacks const& controllerCbs);
@@ -54,6 +56,8 @@ public:
 
 class Controller
 {
+    static constexpr const char* MODULE_TAG{"Controller"};
+
 public:
     Controller(NetConfig const& config, std::unique_ptr<PetriNet> petriNet);
 

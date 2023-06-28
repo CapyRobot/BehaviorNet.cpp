@@ -28,6 +28,7 @@
 #include <string>
 
 #include <behavior_net/Types.hpp>
+#include <utils/Logger.hpp>
 
 #define THROW_ON_NULLPTR(var, moduleNameStr)                                                                           \
     {                                                                                                                  \

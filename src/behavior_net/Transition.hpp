@@ -54,6 +54,8 @@ private:
 
 class Transition
 {
+    static constexpr const char* MODULE_TAG{"Transition"};
+
 public:
     class Factory
     {

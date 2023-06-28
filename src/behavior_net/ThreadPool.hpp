@@ -19,6 +19,7 @@
 
 #include <3rd_party/taskflow/taskflow.hpp>
 #include <behavior_net/Types.hpp>
+#include <utils/Logger.hpp>
 
 #include <atomic>
 #include <condition_variable>
@@ -37,6 +38,8 @@ namespace bnet
  */
 class ThreadPool
 {
+    static constexpr const char* MODULE_TAG{"ThreadPool"};
+
 public:
     /**
      * @brief Task element to be executed by the thread pool.
@@ -44,6 +47,8 @@ public:
      */
     class Task
     {
+        static constexpr const char* MODULE_TAG{"ThreadPool::Task"};
+
     public:
         Task(std::function<ActionExecutionStatus()> func)
             : m_func(func)
@@ -67,15 +72,14 @@ public:
             }
             catch (std::exception& e)
             {
-                std::cerr
-                    << "Task::executeSync: std::exception thrown by m_func(). Returning error action status. error = "
-                    << e.what() << std::endl;
+                LOG(ERROR) << "executeSync: std::exception thrown by m_func(). Returning error action status. error = "
+                           << e.what() << log::endl;
                 m_return = ActionExecutionStatus::ERROR;
             }
             catch (...)
             {
-                std::cerr << "Task::executeSync: unknown exception thrown by m_func(). Returning error action status."
-                          << std::endl;
+                LOG(ERROR) << "executeSync: unknown exception thrown by m_func(). Returning error action status."
+                           << log::endl;
                 m_return = ActionExecutionStatus::ERROR;
             }
             {
@@ -120,9 +124,9 @@ public:
     ~ThreadPool()
     {
         m_stopped.store(true);
-        std::cout << "[ThreadPool::~ThreadPool] Stopping ThreadPoll; waiting for unfinished tasks ..." << std::endl;
+        LOG(DEBUG) << "[ThreadPool::~ThreadPool] Stopping ThreadPoll; waiting for unfinished tasks ..." << log::endl;
         m_executor.wait_for_all();
-        std::cout << "[ThreadPool::~ThreadPool] Stopping ThreadPoll ... done." << std::endl;
+        LOG(DEBUG) << "[ThreadPool::~ThreadPool] Stopping ThreadPoll ... done." << log::endl;
     }
 
     /// @brief add task to the thread pool queue for execution

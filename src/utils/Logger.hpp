@@ -37,6 +37,8 @@
 
 #define LOG(level) LOG_TAGGED(level, MODULE_TAG)
 
+#define SCOPED_LOG_TRACER(id) capybot::log::ScopedTracer tracer(MODULE_TAG, id);
+
 namespace capybot
 {
 namespace log
@@ -170,5 +172,21 @@ LogStream&& operator<<(LogStream&& stream, T const& value)
     stream << value;
     return std::move(stream);
 }
+
+class ScopedTracer
+{
+    const std::string m_id;
+    const std::string MODULE_TAG;
+
+public:
+    ScopedTracer(std::string const& module, std::string const& id)
+        : m_id(id)
+        , MODULE_TAG(module)
+    {
+        LOG(TRACE) << "[ScopedTracer:start] " << m_id << "\n";
+    }
+    ~ScopedTracer() { LOG(TRACE) << "[ScopedTracer:end] " << m_id << "\n"; }
+};
+
 } // namespace log
 } // namespace capybot

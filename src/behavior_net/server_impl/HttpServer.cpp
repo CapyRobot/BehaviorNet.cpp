@@ -49,12 +49,12 @@ HttpServer::HttpServer(nlohmann::json const& config, ControllerCallbacks const& 
     , m_addr(config.at("address").get<std::string>())
     , m_port(config.at("port").get<int>())
 {
-    std::cout << config << std::endl;
+    LOG(INFO) << "Config: " << config << log::endl;
 }
 
 void HttpServer::runServer()
 {
-    std::cout << "HttpServer::runServer: starting HTTP server..." << std::endl;
+    LOG(DEBUG) << "HttpServer::runServer: starting HTTP server..." << log::endl;
     httplib::Server server;
     m_server = &server;
 
@@ -88,7 +88,7 @@ void HttpServer::runServer()
     });
 
     server.listen(m_addr, m_port);
-    std::cout << "HttpServer::runServer: exiting..." << std::endl;
+    LOG(DEBUG) << "HttpServer::runServer: exiting..." << log::endl;
 }
 
 void HttpServer::setCallbacks(httplib::Server& server)

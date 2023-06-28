@@ -24,6 +24,7 @@
 #include <3rd_party/nlohmann/json.hpp>
 
 #include <behavior_net/Token.hpp>
+#include <utils/Logger.hpp>
 
 namespace capybot
 {
@@ -41,6 +42,8 @@ namespace bnet
 template <typename T>
 class ConfigParameter
 {
+    static constexpr const char* MODULE_TAG{"ConfigParameter"};
+
 public:
     ConfigParameter(nlohmann::json const& configParam)
         : m_value(std::nullopt)
@@ -89,12 +92,12 @@ public:
             catch (const nlohmann::json::exception& e)
             {
                 std::stringstream ss;
-                ss << "ConfigParameter::get: failed to get tokenized parameter.\n\tdata: " << data << "\n\tpath: ";
+                ss << "get: failed to get tokenized parameter.\n\tdata: " << data << "\n\tpath: ";
                 for (auto&& p : m_path)
                 {
                     ss << p << ", ";
                 }
-                std::cerr << ss.str() << std::endl;
+                LOG(ERROR) << ss.str() << log::endl;
                 throw;
             }
         }
@@ -109,8 +112,8 @@ private:
         }
         catch (const nlohmann::json::exception& e)
         {
-            std::cerr << "ConfigParameter::getDirectParameter: failed to get parameter direct value - " << configParam
-                      << std::endl;
+            LOG(ERROR) << "ConfigParameter::getDirectParameter: failed to get parameter direct value - " << configParam
+                       << log::endl;
             throw;
         }
     }

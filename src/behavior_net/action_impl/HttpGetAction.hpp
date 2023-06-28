@@ -24,6 +24,7 @@
 #include <3rd_party/cpp-httplib/httplib.h>
 
 #include <list>
+#include <utils/Logger.hpp>
 
 namespace capybot
 {
@@ -45,6 +46,8 @@ namespace bnet
  */
 class HttpGetAction : public IActionImpl
 {
+    static constexpr const char* MODULE_TAG{"HttpGetAction"};
+
 public:
     HttpGetAction(nlohmann::json const config)
         : m_host(config.at("host"))
@@ -101,11 +104,13 @@ private:
             auto err = res.error();
             logMsg << "ERROR; HTTP error: " << httplib::to_string(err) << "\n";
             retStatus = ActionExecutionStatus::ERROR;
+            LOG(ERROR) << logMsg.str();
         }
         else if (res->status < 200 && res->status >= 300)
         {
             logMsg << "ERROR; response status code: " << res->status << "\n";
             retStatus = ActionExecutionStatus::ERROR;
+            LOG(ERROR) << logMsg.str();
         }
         else
         {
@@ -116,16 +121,16 @@ private:
             {
                 logMsg << "Received " << res->body << "; response status code: " << res->status << "\n";
                 retStatus = maybeRetStatus.value();
+                LOG(DEBUG) << logMsg.str();
             }
             else
             {
                 logMsg << "ERROR; response status code: " << res->status
                        << "; unrecognized response body: " << res->body << "\n";
                 retStatus = ActionExecutionStatus::ERROR;
+                LOG(ERROR) << logMsg.str();
             }
         }
-
-        std::cout << logMsg.str() << std::flush;
         return retStatus;
     }
 

@@ -24,6 +24,7 @@
 #include <behavior_net/Types.hpp>
 
 #include <memory>
+#include <sstream>
 #include <string_view>
 
 namespace capybot
@@ -33,6 +34,8 @@ namespace bnet
 
 class PetriNet
 {
+    static constexpr const char* MODULE_TAG{"PetriNet"};
+
 public:
     static std::unique_ptr<PetriNet> create(NetConfig const& config)
     {
@@ -70,20 +73,24 @@ public:
 
     void prettyPrintState() const
     {
-        std::cout << "Marking:" << std::endl;
+        std::stringstream ss;
+        ss << "Marking:\n";
         for (auto&& [id, placePtr] : m_places)
         {
-            std::cout << "\tPlace " << id << ": " << placePtr->getNumberTokensTotal()
-                      << " [available=" << placePtr->getNumberTokensAvailable() << "]"
-                      << " [succcess=" << placePtr->getNumberTokensAvailable(1 << ActionExecutionStatus::SUCCESS) << "]"
-                      << " [failure=" << placePtr->getNumberTokensAvailable(1 << ActionExecutionStatus::FAILURE) << "]"
-                      << " [error=" << placePtr->getNumberTokensAvailable(1 << ActionExecutionStatus::ERROR) << "]"
-                      << std::endl;
+            ss << "\tPlace " << id << ": " << placePtr->getNumberTokensTotal()
+               << " [available=" << placePtr->getNumberTokensAvailable() << "]"
+               << " [succcess=" << placePtr->getNumberTokensAvailable(1 << ActionExecutionStatus::SUCCESS) << "]"
+               << " [failure=" << placePtr->getNumberTokensAvailable(1 << ActionExecutionStatus::FAILURE) << "]"
+               << " [error=" << placePtr->getNumberTokensAvailable(1 << ActionExecutionStatus::ERROR) << "]"
+               << "\n";
         }
+        LOG(DEBUG) << ss.str();
     }
 
     void triggerTransition(std::string_view const& id, bool assertIsManual = false)
     {
+        LOG(DEBUG) << "triggerTransition @ " << id << "; " << (assertIsManual ? "manual" : "auto") << log::endl;
+
         bool exists{false};
         for (auto&& transition : m_transitions)
         {
