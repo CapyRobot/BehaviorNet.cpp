@@ -17,12 +17,27 @@
 
 #include <3rd_party/taywee/args.hpp>
 
+#include <csignal>
 #include <cstdlib>
 #include <optional>
 #include <stdexcept>
 
 #include <behavior_net/Controller.hpp>
 #include <utils/Logger.hpp>
+
+class SignalHandler
+{
+public:
+    using callback_t = std::function<void(int)>;
+
+    static void registerCallback(callback_t cb) { s_cb = cb; }
+    static void registerSignals() { std::signal(SIGINT, SignalHandler::handler); }
+    static void handler(int signum) { s_cb(signum); }
+
+private:
+    static callback_t s_cb;
+};
+SignalHandler::callback_t SignalHandler::s_cb{};
 
 using namespace capybot;
 
@@ -108,6 +123,13 @@ int main(int argc, char** argv)
     auto net = bnet::PetriNet::create(config);
 
     bnet::Controller controller(config, std::move(net));
+
+    SignalHandler::registerCallback([&controller](int sig) {
+        LOG_TAGGED(INFO, "SignalHandler") << "Received sig " << sig << ". Exiting..." << log::endl;
+        LOG_TAGGED(DEBUG, "SignalHandler") << "Calling controller.stop()..." << log::endl;
+        controller.stop();
+    });
+    SignalHandler::registerSignals();
 
     LOG_TAGGED(DEBUG, "main") << "Running ... " << capybot::log::endl;
     controller.run();
