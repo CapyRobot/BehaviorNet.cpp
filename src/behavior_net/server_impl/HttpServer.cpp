@@ -49,12 +49,12 @@ HttpServer::HttpServer(nlohmann::json const& config, ControllerCallbacks const& 
     , m_addr(config.at("address").get<std::string>())
     , m_port(config.at("port").get<int>())
 {
-    LOG(INFO) << "Config: " << config << log::endl;
+    LOG(INFO) << "Running @ http://" << m_addr << ":" << m_port << log::endl;
 }
 
 void HttpServer::runServer()
 {
-    LOG(DEBUG) << "HttpServer::runServer: starting HTTP server..." << log::endl;
+    LOG(DEBUG) << "runServer: starting HTTP server..." << log::endl;
     httplib::Server server;
     m_server = &server;
 
@@ -78,6 +78,8 @@ void HttpServer::runServer()
         }
         res.set_content(buf, "text/html");
         res.status = 500;
+
+        LOG(ERROR) << "Exception caught while handling request: " << buf << log::endl;
     });
 
     server.set_error_handler([](const auto& req, auto& res) {
@@ -85,22 +87,30 @@ void HttpServer::runServer()
         char buf[BUFSIZ];
         snprintf(buf, sizeof(buf), fmt, res.status);
         res.set_content(buf, "text/html");
+
+        LOG(ERROR) << "Error caught while handling request: " << buf << log::endl;
     });
 
     server.listen(m_addr, m_port);
-    LOG(DEBUG) << "HttpServer::runServer: exiting..." << log::endl;
+    LOG(DEBUG) << "runServer: exiting..." << log::endl;
 }
 
 void HttpServer::setCallbacks(httplib::Server& server)
 {
+    server.Get("/", [](const httplib::Request& req, httplib::Response& res) {
+        res.set_content("You have reached bnet::capybot::HttpServer.", "text/plain");
+    });
     server.Post("/add_token", [this](const httplib::Request& req, httplib::Response& res) {
         nlohmann::json payload = nlohmann::json::parse(req.body);
         m_controllerCbs.addToken(payload.at("content_blocks"), payload.at("place_id").get<std::string>());
-        res.set_content("success!", "application/json");
+    });
+    server.Get("/get_config", [this](const httplib::Request& req, httplib::Response& res) {
+        nlohmann::json marking = m_controllerCbs.getNetMarking();
+        res.set_content(marking.at("config").dump(), "application/json");
     });
     server.Get("/get_marking", [this](const httplib::Request& req, httplib::Response& res) {
         nlohmann::json marking = m_controllerCbs.getNetMarking();
-        res.set_content(marking.dump(), "application/json");
+        res.set_content(marking.at("marking").dump(), "application/json");
     });
     server.Post("/trigger_manual_transition/(.*)", [this](const httplib::Request& req, httplib::Response& res) {
         auto id = req.matches[1];
