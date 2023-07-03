@@ -23,6 +23,7 @@
 #include <behavior_net/Transition.hpp>
 #include <behavior_net/Types.hpp>
 
+#include <iomanip>
 #include <memory>
 #include <sstream>
 #include <string_view>
@@ -73,17 +74,38 @@ public:
 
     void prettyPrintState() const
     {
+        std::size_t max_id_size = 10;
+        for (auto&& [id, _] : m_places)
+        {
+            max_id_size = std::max(max_id_size, id.size());
+        }
+
+        /*
+          Place ID     Total Available   Success     Error   Failure
+        ------------------------------------------------------------
+                 A         3         3         3         0         0
+                 B         1         1         1         0         0
+                 C         1         1         0         1         0
+                 D         1         1         1         0         0
+        */
+
         std::stringstream ss;
-        ss << "Marking:\n";
+        ss << "Marking:\n\n";
+        ss << "\t" << std::setfill(' ') << std::setw(max_id_size) << "Place ID" << std::setw(10) << "Total"
+           << std::setw(10) << "Available" << std::setw(10) << "Success" << std::setw(10) << "Error" << std::setw(10)
+           << "Failure"
+           << "\n";
+        ss << "\t" << std::setfill('-') << std::setw(max_id_size + 50) << "-"
+           << "\n";
         for (auto&& [id, placePtr] : m_places)
         {
-            ss << "\tPlace " << id << ": " << placePtr->getNumberTokensTotal()
-               << " [available=" << placePtr->getNumberTokensAvailable() << "]"
-               << " [succcess=" << placePtr->getNumberTokensAvailable(1 << ActionExecutionStatus::SUCCESS) << "]"
-               << " [failure=" << placePtr->getNumberTokensAvailable(1 << ActionExecutionStatus::FAILURE) << "]"
-               << " [error=" << placePtr->getNumberTokensAvailable(1 << ActionExecutionStatus::ERROR) << "]"
-               << "\n";
+            ss << "\t" << std::setfill(' ') << std::setw(max_id_size) << id << std::setw(10)
+               << placePtr->getNumberTokensTotal() << std::setw(10) << placePtr->getNumberTokensAvailable()
+               << std::setw(10) << placePtr->getNumberTokensAvailable(1 << ActionExecutionStatus::SUCCESS)
+               << std::setw(10) << placePtr->getNumberTokensAvailable(1 << ActionExecutionStatus::ERROR)
+               << std::setw(10) << placePtr->getNumberTokensAvailable(1 << ActionExecutionStatus::FAILURE) << "\n";
         }
+        ss << "\n";
         LOG(DEBUG) << ss.str();
     }
 

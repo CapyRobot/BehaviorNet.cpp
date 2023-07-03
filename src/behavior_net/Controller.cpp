@@ -65,7 +65,7 @@ void Controller::run()
     }
     while (m_running.load())
     {
-        m_net->prettyPrintState();
+        // TODO: cli arg to activate m_net->prettyPrintState();
         runEpoch();
     }
 }
